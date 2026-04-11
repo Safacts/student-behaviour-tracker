@@ -1,0 +1,8 @@
+# 1. Install all dependencies
+pip install fastapi uvicorn google-generativeai python-dotenv
+
+# 2. Seed the database with synthetic data
+python data_generator.py
+
+# 3. Start the application
+python main.py
