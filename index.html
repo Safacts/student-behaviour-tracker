@@ -13,62 +13,102 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        .tab-active {
+            border-bottom: 3px solid #4f46e5;
+            color: #4f46e5;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-900">
-    <div class="max-w-4xl mx-auto py-12 px-4">
-        <header class="text-center mb-12">
+    <div class="max-w-6xl mx-auto py-12 px-4">
+        <header class="text-center mb-8">
             <h1 class="text-4xl font-extrabold text-indigo-900 mb-2">Student Behavior Insights</h1>
             <p class="text-slate-600">Proof of Concept Dashboard for AI-Driven Reporting</p>
         </header>
 
-        <div class="glass p-8 rounded-3xl shadow-xl mb-8">
-            <label for="student-select" class="block text-sm font-semibold text-slate-700 mb-2">Select Student Profile</label>
-            <select id="student-select" class="w-full p-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                <option value="" disabled selected>Choose a student...</option>
-            </select>
+        <!-- Tab Navigation -->
+        <div class="flex justify-center space-x-8 mb-8 border-b border-slate-200">
+            <button id="tab-insights" class="pb-4 text-sm font-bold uppercase tracking-widest tab-active transition-all">AI Insights</button>
+            <button id="tab-raw" class="pb-4 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Activity Log</button>
         </div>
 
-        <div id="loading" class="hidden text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
-            <p class="mt-4 text-slate-600 font-medium">Analyzing behavioral data...</p>
-        </div>
-
-        <div id="report-container" class="hidden space-y-6">
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <p class="text-sm text-slate-500 font-medium">Total Study Time</p>
-                    <p class="text-3xl font-bold text-indigo-600" id="stat-time">-</p>
-                    <p class="text-xs text-slate-400">minutes / week</p>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <p class="text-sm text-slate-500 font-medium">Avg Marks</p>
-                    <p class="text-3xl font-bold text-indigo-600" id="stat-marks">-</p>
-                    <p class="text-xs text-slate-400">percentile</p>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <p class="text-sm text-slate-500 font-medium">Behavioral Tag</p>
-                    <div id="stat-tag" class="mt-2 inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                        -
-                    </div>
-                </div>
+        <!-- Insights View -->
+        <div id="view-insights">
+            <div class="glass p-8 rounded-3xl shadow-xl mb-8">
+                <label for="student-select" class="block text-sm font-semibold text-slate-700 mb-2">Select Student Profile</label>
+                <select id="student-select" class="w-full p-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                    <option value="" disabled selected>Choose a student...</option>
+                </select>
             </div>
 
-            <!-- AI Report -->
-            <div class="bg-indigo-900 text-white p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="bg-indigo-500 p-2 rounded-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                        </span>
-                        <h2 class="text-xl font-bold">AI Parental Recommendation</h2>
+            <div id="loading" class="hidden text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
+                <p class="mt-4 text-slate-600 font-medium">Analyzing behavioral data...</p>
+            </div>
+
+            <div id="report-container" class="hidden space-y-6">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <p class="text-sm text-slate-500 font-medium">Total Study Time</p>
+                        <p class="text-3xl font-bold text-indigo-600" id="stat-time">-</p>
+                        <p class="text-xs text-slate-400">minutes / week</p>
                     </div>
-                    <p id="ai-report" class="text-lg leading-relaxed text-indigo-100 italic">
-                        Select a student to generate a report.
-                    </p>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <p class="text-sm text-slate-500 font-medium">Avg Marks</p>
+                        <p class="text-3xl font-bold text-indigo-600" id="stat-marks">-</p>
+                        <p class="text-xs text-slate-400">percentile</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <p class="text-sm text-slate-500 font-medium">Behavioral Tag</p>
+                        <div id="stat-tag" class="mt-2 inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                            -
+                        </div>
+                    </div>
                 </div>
-                <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-indigo-800 rounded-full opacity-50 blur-3xl"></div>
+
+                <!-- AI Report -->
+                <div class="bg-indigo-900 text-white p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="bg-indigo-500 p-2 rounded-lg">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                            </span>
+                            <h2 class="text-xl font-bold">AI Parental Recommendation</h2>
+                        </div>
+                        <p id="ai-report" class="text-lg leading-relaxed text-indigo-100 italic">
+                            Select a student to generate a report.
+                        </p>
+                    </div>
+                    <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-indigo-800 rounded-full opacity-50 blur-3xl"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raw Data View -->
+        <div id="view-raw" class="hidden">
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                <div class="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-slate-800">Complete Activity Database</h2>
+                    <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold">LATEST RECORDS FIRST</span>
+                </div>
+                <div class="overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0">
+                            <tr>
+                                <th class="px-6 py-4">Student</th>
+                                <th class="px-6 py-4">Activity</th>
+                                <th class="px-6 py-4">Time (min)</th>
+                                <th class="px-6 py-4">Score (%)</th>
+                                <th class="px-6 py-4">Distraction</th>
+                                <th class="px-6 py-4">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="raw-data-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -77,6 +117,32 @@
         const studentSelect = document.getElementById('student-select');
         const reportContainer = document.getElementById('report-container');
         const loading = document.getElementById('loading');
+        
+        const tabInsights = document.getElementById('tab-insights');
+        const tabRaw = document.getElementById('tab-raw');
+        const viewInsights = document.getElementById('view-insights');
+        const viewRaw = document.getElementById('view-raw');
+        const rawBody = document.getElementById('raw-data-body');
+
+        // Tab Switching
+        tabInsights.addEventListener('click', () => {
+            tabInsights.classList.add('tab-active');
+            tabInsights.classList.remove('text-slate-400');
+            tabRaw.classList.remove('tab-active');
+            tabRaw.classList.add('text-slate-400');
+            viewInsights.classList.remove('hidden');
+            viewRaw.classList.add('hidden');
+        });
+
+        tabRaw.addEventListener('click', () => {
+            tabRaw.classList.add('tab-active');
+            tabRaw.classList.remove('text-slate-400');
+            tabInsights.classList.remove('tab-active');
+            tabInsights.classList.add('text-slate-400');
+            viewRaw.classList.remove('hidden');
+            viewInsights.classList.add('hidden');
+            fetchRawData();
+        });
 
         // Fetch student list
         async function fetchStudents() {
@@ -94,6 +160,36 @@
             }
         }
 
+        // Fetch Raw Activity Data
+        async function fetchRawData() {
+            rawBody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400">Loading database entries...</td></tr>';
+            try {
+                const response = await fetch('/api/activity-logs');
+                const logs = await response.json();
+                rawBody.innerHTML = '';
+                logs.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-50 transition-colors";
+                    row.innerHTML = `
+                        <td class="px-6 py-4 font-semibold">${log.student_name}</td>
+                        <td class="px-6 py-4 text-slate-600">${log.activity_type}</td>
+                        <td class="px-6 py-4">${log.time_spent_mins}</td>
+                        <td class="px-6 py-4">${log.marks_achieved_percent}%</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${log.distraction_score > 7 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}">
+                                ${log.distraction_score}/10
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-400 text-xs">${log.date}</td>
+                    `;
+                    rawBody.appendChild(row);
+                });
+            } catch (err) {
+                console.error("Failed to fetch raw data", err);
+                rawBody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-400">Error loading data.</td></tr>';
+            }
+        }
+
         // Fetch report
         studentSelect.addEventListener('change', async (e) => {
             const studentId = e.target.value;
@@ -104,14 +200,12 @@
                 const response = await fetch(`/api/report/${studentId}`);
                 const data = await response.json();
 
-                // Update UI
                 document.getElementById('stat-time').textContent = `${data.stats.total_time}`;
                 document.getElementById('stat-marks').textContent = `${data.stats.avg_marks}%`;
                 
                 const tagEl = document.getElementById('stat-tag');
                 tagEl.textContent = data.analysis.tag;
                 
-                // Color logic for tags
                 tagEl.className = "mt-2 inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ";
                 if(data.analysis.tag === 'High Flight Risk') tagEl.classList.add('bg-red-100', 'text-red-700');
                 else if(data.analysis.tag === 'Concept Comprehension Issue') tagEl.classList.add('bg-amber-100', 'text-amber-700');
@@ -124,7 +218,6 @@
             } catch (err) {
                 console.error("Error fetching report", err);
                 loading.classList.add('hidden');
-                alert("Failed to generate report. Check console.");
             }
         });
 

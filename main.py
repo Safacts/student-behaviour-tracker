@@ -18,6 +18,16 @@ def get_students():
     conn.close()
     return students
 
+@app.get("/api/activity-logs")
+def get_activity_logs():
+    conn = sqlite3.connect('behavior.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM student_activity ORDER BY date DESC, id DESC")
+    columns = [column[0] for column in cursor.description]
+    logs = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    conn.close()
+    return logs
+
 @app.get("/api/report/{student_id}")
 def get_report(student_id: str):
     # 1. Run Analysis
