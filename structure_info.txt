@@ -1,0 +1,9 @@
+# Directory structure created via script or manual calls:
+# C:\internship\student_behavior_analysis\
+# ├── db_importer.py
+# ├── api_service.py
+# ├── run_dashboard.py
+# └── static/
+#     ├── index.html
+#     ├── style.css
+#     └── app.js

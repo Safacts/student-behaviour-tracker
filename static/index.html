@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubix Intelligence | Behavioral Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">R</div>
+                <h1>RUBIX<span>.AI</span></h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </button>
+                <button class="nav-item" data-tab="explorer">
+                    <span class="icon">🔍</span> Data Explorer
+                </button>
+                <button class="nav-item" data-tab="student-detail">
+                    <span class="icon">👤</span> Student Deep-Dive
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div style="margin-bottom: 8px;">CONNECTED TO NODE_01</div>
+                <div>v1.2.4 STABLE REQ</div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Global Top Bar -->
+            <header class="top-bar">
+                <div class="search-container">
+                    <span>🔍</span>
+                    <input type="text" placeholder="Search students, logs, or behavioral patterns...">
+                </div>
+                
+                <div class="user-zone">
+                    <div class="status-chip">
+                        <div class="status-dot"></div>
+                        SYSTEM LIVE
+                    </div>
+                    <div class="user-profile">
+                        <div class="text-right" style="text-align: right; margin-right: 12px;">
+                            <div style="font-size: 13px; font-weight: 600;">Admin User</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Security Lead</div>
+                        </div>
+                        <div class="avatar">AD</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="dashboard" class="tab-content active page-wrapper">
+                <div class="view-header">
+                    <h2>Analytics Overview</h2>
+                    <p>Aggregated behavioral metrics across current student cohort.</p>
+                </div>
+
+                <div class="bento-grid">
+                    <!-- KPI Cards -->
+                    <div class="card kpi-card">
+                        <div class="stat-label">Total Students</div>
+                        <div class="stat-value" id="stat-students">0</div>
+                        <div class="stat-trend trend-up">↑ 12% increase</div>
+                    </div>
+                    <div class="card kpi-card">
+                        <div class="stat-label">Total Sessions</div>
+                        <div class="stat-value" id="stat-sessions">0</div>
+                        <div class="stat-trend">Stable activity</div>
+                    </div>
+                    <div class="card kpi-card">
+                        <div class="stat-label">Avg Focus Time</div>
+                        <div class="stat-value" id="stat-avg-time">0m</div>
+                        <div class="stat-trend trend-down">↓ 4% decrease</div>
+                    </div>
+                    <div class="card kpi-card">
+                        <div class="stat-label">Alert Status</div>
+                        <div class="stat-value" style="color: var(--warning);">Nominal</div>
+                        <div class="stat-trend">No critical flags</div>
+                    </div>
+
+                    <!-- Main Chart Row -->
+                    <div class="card chart-main">
+                        <h4 style="margin-bottom: 20px;">Subject Engagement Distribution</h4>
+                        <div style="height: 300px;">
+                            <canvas id="subjectChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card list-side">
+                        <h4 style="margin-bottom: 20px;">High-Activity Cohort</h4>
+                        <div id="top-students-list" class="scroll-list" style="overflow-y: auto; height: 300px;">
+                            <!-- Populated via JS -->
+                            <div style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 100px;">
+                                Analyzing student rankings...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Explorer View -->
+            <section id="explorer" class="tab-content page-wrapper">
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <h2>Data Explorer</h2>
+                        <p>Direct low-level access to behavioral databases.</p>
+                    </div>
+                    <div class="search-mini">
+                        <select id="table-select" style="background: var(--bg-surface); border: 1px solid var(--border-subtle); color: white; padding: 8px 12px; border-radius: 8px; outline: none; cursor: pointer;">
+                            <option value="">Select Target Table...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card table-full">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <span id="record-count" style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">Querying records...</span>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <button id="prev-page" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Previous</button>
+                            <span id="page-info" style="font-size: 13px; font-weight: 600;">1 / 1</span>
+                            <button id="next-page" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Next</button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="data-table">
+                            <thead>
+                                <tr id="table-head"></tr>
+                            </thead>
+                            <tbody id="table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Student Detail View -->
+            <section id="student-detail" class="tab-content page-wrapper">
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div class="student-profile-summary">
+                        <div class="profile-avatar">👤</div>
+                        <div>
+                            <h2 id="student-name">Select a Student</h2>
+                            <p id="student-id-display">N/A</p>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: right;">
+                        <div class="search-mini" style="margin-bottom: 12px;">
+                            <input type="number" id="target-student-id" placeholder="Enter ID (e.g. 4)" style="width: 120px;">
+                            <button id="load-student-btn" class="btn btn-outline">Sync Data</button>
+                        </div>
+                        <button id="generate-ai-report-btn" class="btn btn-primary">
+                            <span>✨</span> Generate Intelligence Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Structured AI Intelligence Report -->
+                <div id="ai-report-box" class="ai-report-container" style="display: none;">
+                    <div class="report-header">
+                        <div>
+                            <h3 style="color: var(--primary); margin-bottom: 4px;">Intelligence Advisory</h3>
+                            <p id="report-date" style="font-size: 12px; opacity: 0.6;"></p>
+                        </div>
+                        <div class="badge" style="background: rgba(99, 102, 241, 0.2); color: var(--primary);">Confidential Analysis</div>
+                    </div>
+                    <div id="report-text" class="report-content">
+                        <!-- Content will be injected and formatted via JS -->
+                    </div>
+                </div>
+
+                <!-- Technical Analytics -->
+                <div class="bento-grid">
+                    <div class="card" style="grid-column: span 12; height: 400px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+                            <h4>Engagement Trajectory</h4>
+                            <div class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">Multi-Day Aggregate</div>
+                        </div>
+                        <div style="height: 300px;">
+                            <canvas id="studentTimeSeriesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card" style="grid-column: span 5; height: 450px;">
+                        <h4>Domain Mastery Radar</h4>
+                        <div style="height: 350px; margin-top: 20px;">
+                            <canvas id="studentSubjectChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card" style="grid-column: span 7; height: 450px;">
+                        <h4>Recent Behavioral Events</h4>
+                        <div id="student-activities" style="margin-top: 20px; overflow-y: auto; height: 350px;">
+                            <!-- Logs injected here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
