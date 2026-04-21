@@ -1,9 +1,11 @@
 import openai
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 def generate_fallback_report(student_data, behavioral_tag):
     """
@@ -35,10 +37,37 @@ def generate_fallback_report(student_data, behavioral_tag):
     else:
         return f"{student_name} shows potential for growth with current study habits. I recommend establishing clear academic goals, regular progress monitoring, and celebrating small achievements to build confidence and maintain motivation throughout the learning journey."
 
+def generate_gemini_report(student_data, behavioral_tag):
+    """
+    Generate recommendation using Google Gemini API.
+    """
+    try:
+        if GOOGLE_API_KEY and GOOGLE_API_KEY != "your_google_api_key_here":
+            genai.configure(api_key=GOOGLE_API_KEY)
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            prompt = f"""
+            You are an empathetic educational advisor. Write a 3-sentence recommendation for a parent based on their child's weekly activity data:
+            
+            Student: {student_data['student_name']}
+            Total Time Spent: {student_data['total_study_time']} mins
+            Average Distraction Score: {student_data['avg_distraction']}/10
+            Average Marks: {student_data['avg_marks']}%
+            Behavioral Status: {behavioral_tag}
+            
+            The report should be supportive, concise, and focused on improvement or celebration.
+            """
+            
+            response = model.generate_content(prompt)
+            return response.text.strip()
+        else:
+            return None
+    except Exception as e:
+        return None
+
 def generate_parent_report(student_data, behavioral_tag):
     """
-    Constructs a prompt and calls OpenAI to generate a 3-sentence empathetic report.
-    Falls back to rule-based recommendations if API is unavailable.
+    Hybrid AI system: Try OpenAI first, then Gemini, then fallback to rule-based recommendations.
     """
     # Try OpenAI first
     if OPENAI_API_KEY and OPENAI_API_KEY != "[INSERT_API_KEY_HERE]":
@@ -68,10 +97,15 @@ def generate_parent_report(student_data, behavioral_tag):
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
-            # Fall back to rule-based recommendations
-            return generate_fallback_report(student_data, behavioral_tag)
+            # OpenAI failed, try Gemini
+            pass
     
-    # No API key available, use fallback
+    # Try Gemini as second option
+    gemini_result = generate_gemini_report(student_data, behavioral_tag)
+    if gemini_result:
+        return gemini_result
+    
+    # Both APIs failed or unavailable, use rule-based fallback
     return generate_fallback_report(student_data, behavioral_tag)
 
 if __name__ == "__main__":
