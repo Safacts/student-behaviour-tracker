@@ -424,17 +424,48 @@
                 red: 'border-red-200 bg-red-50'
             };
 
+            let content = '';
+            
+            // Handle behavior analysis data
+            if (data.total_study_time !== undefined) {
+                content += `
+                    <div class="text-sm"><span class="font-medium">Total Study Time:</span> ${data.total_study_time} mins</div>
+                    <div class="text-sm"><span class="font-medium">Avg Distraction:</span> ${data.avg_distraction}/10</div>
+                    <div class="text-sm"><span class="font-medium">Avg Marks:</span> ${data.avg_marks}%</div>
+                    <div class="text-sm"><span class="font-medium">Behavioral Tag:</span> <span class="font-semibold ${data.behavioral_tag === 'High Flight Risk' ? 'text-red-600' : data.behavioral_tag === 'Concept Comprehension Issue' ? 'text-orange-600' : 'text-green-600'}">${data.behavioral_tag}</span></div>
+                    ${data.marks_trend !== undefined ? `<div class="text-sm"><span class="font-medium">Marks Trend:</span> ${data.marks_trend > 0 ? '+' : ''}${data.marks_trend}%</div>` : ''}
+                `;
+            }
+            
+            // Handle learning path data
+            if (data.level) {
+                content += `
+                    <div class="text-sm"><span class="font-medium">Learning Level:</span> ${data.level}</div>
+                    <div class="text-sm"><span class="font-medium">Duration:</span> ${data.duration}</div>
+                    ${data.milestones ? `<div class="text-sm"><span class="font-medium">Milestones:</span> ${data.milestones.length} weeks</div>` : ''}
+                `;
+            }
+            
+            // Handle intervention data
+            if (data.urgency) {
+                content += `
+                    <div class="text-sm"><span class="font-medium">Urgency:</span> <span class="font-semibold ${data.urgency === 'HIGH' ? 'text-red-600' : data.urgency === 'MEDIUM' ? 'text-orange-600' : 'text-green-600'}">${data.urgency}</span></div>
+                    <div class="text-sm"><span class="font-medium">Intervention Type:</span> ${data.intervention_type}</div>
+                    <div class="text-sm"><span class="font-medium">Timeline:</span> ${data.timeline}</div>
+                    ${data.actions ? `<div class="text-sm"><span class="font-medium">Actions:</span> ${data.actions.slice(0, 2).join(', ')}...</div>` : ''}
+                `;
+            }
+            
+            // Handle agent field
+            if (data.agent) {
+                content = `<div class="text-sm"><span class="font-medium">Agent:</span> ${data.agent}</div>` + content;
+            }
+
             return `
                 <div class="border-2 ${colorClasses[color]} p-6 rounded-xl">
                     <h4 class="font-semibold text-slate-800 mb-4">${title}</h4>
-                    <div class="space-y-3">
-                        ${data.agent ? `<div class="text-sm"><span class="font-medium">Agent:</span> ${data.agent}</div>` : ''}
-                        ${data.learning_level ? `<div class="text-sm"><span class="font-medium">Learning Level:</span> ${data.learning_level}</div>` : ''}
-                        ${data.urgency_level ? `<div class="text-sm"><span class="font-medium">Urgency:</span> <span class="font-semibold ${data.urgency_level === 'Critical' ? 'text-red-600' : data.urgency_level === 'High' ? 'text-orange-600' : 'text-green-600'}">${data.urgency_level}</span></div>` : ''}
-                        ${data.confidence_score ? `<div class="text-sm"><span class="font-medium">Confidence:</span> ${(data.confidence_score * 100).toFixed(1)}%</div>` : ''}
-                        ${data.risk_factors ? `<div class="text-sm"><span class="font-medium">Risk Factors:</span> ${data.risk_factors.join(', ')}</div>` : ''}
-                        ${data.milestones ? `<div class="text-sm"><span class="font-medium">Milestones:</span> ${data.milestones.slice(0, 3).join(', ')}...</div>` : ''}
-                        ${data.intervention_strategies ? `<div class="text-sm"><span class="font-medium">Strategies:</span> ${data.intervention_strategies.slice(0, 3).join(', ')}...</div>` : ''}
+                    <div class="space-y-2">
+                        ${content}
                     </div>
                 </div>
             `;
