@@ -114,25 +114,31 @@ This is a production-grade microservice for analyzing student behavior patterns,
 
 ## AI/Heuristic System Details
 
-### AI Component (OpenAI GPT-3.5)
-- Used when OPENAI_API_KEY is available and valid
-- Generates empathetic, context-aware parent recommendations
-- 3-sentence format with emotional intelligence
-- Configurable temperature and token limits
+### Hybrid AI System (Priority Order):
+  1. **OpenAI GPT-3.5** - When API key has quota
+  2. **Google Gemini** - When API key has access
+  3. **Groq FREE** - Primary free AI option (Llama models)
+  4. **Hardcoded fallback** - Rule-based recommendations
 
-### Heuristic Component (Rule-based)
-- Activates when AI API is unavailable or fails
-- Predefined rules based on behavioral tags:
-  - "High Flight Risk" - Academic challenges, high distraction
-  - "Concept Comprehension Issue" - Good effort but different learning approaches needed
-  - "On Track" - Good progress, positive trajectory
-- Consistent, reliable fallback responses
+### Groq FREE AI (Currently Active):
+  - Completely free tier, no payment required
+  - Uses Llama 3.1 8B Instant model
+  - Fast AI inference
+  - High-quality empathetic recommendations
+  - Get free key at: https://console.groq.com/
+
+### Heuristic Component (Rule-based):
+  - Activates when all AI APIs fail
+  - Predefined rules based on behavioral tags:
+    - "High Flight Risk" - Academic challenges, high distraction
+    - "Concept Comprehension Issue" - Good effort but different learning approaches needed
+    - "On Track" - Good progress, positive trajectory
+  - Consistent, reliable fallback responses
 
 ## Behavioral Analysis Tags
 - **High Flight Risk**: Low marks (<50%) and/or high distraction (>6)
 - **Concept Comprehension Issue**: Low marks (<70%) but low distraction (<3)
 - **On Track**: Good marks (>70%) and reasonable distraction
-- **High Performer**: Excellent marks (>85%) with good habits
 
 ## Current Issues
 - Service startup issues after integrating production-grade features
