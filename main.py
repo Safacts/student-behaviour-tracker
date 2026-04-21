@@ -197,6 +197,68 @@ def get_agent_tools():
     """Get tool schema for agentic AI integration"""
     return TOOL_SCHEMA
 
+@app.get("/api/agents/comprehensive/{student_id}")
+def comprehensive_agent(student_id: str):
+    """Comprehensive Agent - Runs all agents and combines results"""
+    try:
+        # Get analysis from all agents
+        behavior_analysis = analyze_student_behavior(student_id)
+        learning_path = create_learning_path(student_id)
+        intervention = suggest_intervention(student_id)
+        
+        # Generate summary
+        behavioral_tag = behavior_analysis.get("behavioral_tag", "Unknown")
+        avg_marks = behavior_analysis.get("avg_marks", 0)
+        
+        # Determine overall risk level
+        if behavioral_tag == "High Flight Risk":
+            overall_risk = "Critical"
+            success_prob = 0.4
+        elif behavioral_tag == "Concept Comprehension Issue":
+            overall_risk = "High"
+            success_prob = 0.6
+        else:
+            overall_risk = "Low"
+            success_prob = 0.8
+        
+        # Generate recommended actions
+        if overall_risk == "Critical":
+            recommended_actions = [
+                "Immediate intervention required",
+                "Daily monitoring needed",
+                "Parent meeting scheduled"
+            ]
+        elif overall_risk == "High":
+            recommended_actions = [
+                "Weekly check-ins",
+                "Additional support resources",
+                "Progress tracking"
+            ]
+        else:
+            recommended_actions = [
+                "Continue current approach",
+                "Monitor for changes",
+                "Provide enrichment opportunities"
+            ]
+        
+        return {
+            "agent": "Comprehensive Agent",
+            "student_id": student_id,
+            "comprehensive_analysis": {
+                "behavior_analysis": behavior_analysis,
+                "learning_path": learning_path,
+                "intervention_plan": intervention
+            },
+            "summary": {
+                "overall_risk_level": overall_risk,
+                "success_probability": success_prob,
+                "recommended_actions": recommended_actions
+            },
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Comprehensive analysis failed: {str(e)}")
+
 # Serve the index.html
 @app.get("/")
 def read_root():
