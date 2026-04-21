@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration Documentation - Student Behavior Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .tab-active {
+            border-bottom: 3px solid #4f46e5;
+            color: #4f46e5;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .copy-btn {
+            background: #4f46e5;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            float: right;
+        }
+        .copy-btn:hover {
+            background: #4338ca;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen text-slate-900">
+    <!-- Navigation Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-indigo-900">Student Behavior Analytics</h1>
+                    <span class="ml-4 px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full">Integration Docs</span>
+                </div>
+                <nav class="flex space-x-8">
+                    <a href="/" class="text-slate-500 hover:text-indigo-600 transition-colors">Dashboard</a>
+                    <a href="/dashboard" class="text-slate-500 hover:text-indigo-600 transition-colors">Testing</a>
+                    <a href="/agents" class="text-slate-500 hover:text-indigo-600 transition-colors">Agents</a>
+                    <a href="/monitor" class="text-slate-500 hover:text-indigo-600 transition-colors">Monitor</a>
+                    <a href="/docs" class="text-indigo-600 font-semibold border-b-2 border-indigo-600">Integration</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-indigo-900 mb-4">Integration Documentation</h1>
+            <p class="text-xl text-slate-600 max-w-3xl mx-auto">Complete guide for integrating Student Behavior Analytics microservice into your existing project</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex justify-center space-x-6 mb-8 border-b border-slate-200">
+            <button id="tab-overview" class="pb-3 text-sm font-bold uppercase tracking-widest tab-active transition-all">Overview</button>
+            <button id="tab-apis" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">API Reference</button>
+            <button id="tab-agents" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Agents</button>
+            <button id="tab-examples" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Examples</button>
+            <button id="tab-deployment" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Deployment</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="view-overview">
+            <div class="glass p-8 rounded-2xl shadow-lg mb-8">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">System Overview</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-700 mb-4">What This System Provides</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">📊</span>
+                                <div>
+                                    <h4 class="font-medium text-slate-700">Real-time Analytics</h4>
+                                    <p class="text-sm text-slate-600">Live student behavior analysis with risk assessment</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">🤖</span>
+                                <div>
+                                    <h4 class="font-medium text-slate-700">Agentic AI Framework</h4>
+                                    <p class="text-sm text-slate-600">Three specialized AI agents for comprehensive analysis</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">🎯</span>
+                                <div>
+                                    <h4 class="font-medium text-slate-700">Targeted Interventions</h4>
+                                    <p class="text-sm text-slate-600">Specific recommendations for at-risk students</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-2xl mr-3">📈</span>
+                                <div>
+                                    <h4 class="font-medium text-slate-700">Learning Path Creation</h4>
+                                    <p class="text-sm text-slate-600">Personalized educational roadmaps</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-700 mb-4">Integration Benefits</h3>
+                        <div class="space-y-3">
+                            <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                                <h4 class="font-medium text-green-800 mb-2">🚀 Quick Integration</h4>
+                                <p class="text-sm text-green-700">RESTful APIs with simple HTTP requests - no complex setup required</p>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                                <h4 class="font-medium text-blue-800 mb-2">🔄 Real-time Data</h4>
+                                <p class="text-sm text-blue-700">Live student data with immediate analysis results</p>
+                            </div>
+                            <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg">
+                                <h4 class="font-medium text-purple-800 mb-2">⚡ Intelligent Insights</h4>
+                                <p class="text-sm text-purple-700">AI-powered recommendations with fallback logic</p>
+                            </div>
+                            <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                                <h4 class="font-medium text-orange-800 mb-2">🛡️ Risk Management</h4>
+                                <p class="text-sm text-orange-700">Proactive identification of at-risk students</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Architecture Diagram -->
+            <div class="glass p-8 rounded-2xl shadow-lg">
+                <h3 class="text-xl font-bold text-slate-800 mb-6">System Architecture</h3>
+                <div class="bg-white p-6 rounded-xl border border-slate-200">
+                    <div class="text-center mb-6">
+                        <div class="inline-block text-center">
+                            <div class="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-lg font-semibold mb-4">Your Existing System</div>
+                            <div class="text-3xl text-slate-400 mb-4">↓</div>
+                            <div class="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-semibold">HTTP API Calls</div>
+                            <div class="text-3xl text-slate-400 mb-4">↓</div>
+                            <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold">Student Behavior Analytics</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                        <div class="text-center">
+                            <h4 class="font-semibold text-slate-700 mb-2">Frontend</h4>
+                            <p class="text-slate-600">Your existing web application or mobile app</p>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="font-semibold text-slate-700 mb-2">Integration Layer</h4>
+                            <p class="text-slate-600">HTTP requests to our RESTful APIs</p>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="font-semibold text-slate-700 mb-2">Analytics Engine</h4>
+                            <p class="text-slate-600">Student Behavior Analytics Microservice</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Reference Tab -->
+        <div id="view-apis" class="hidden">
+            <div class="space-y-8">
+                <!-- Core APIs -->
+                <div class="glass p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Core APIs</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Students API -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-3">Students Management</h4>
+                            <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">GET</span>
+                                    <span class="font-mono text-sm">/api/students</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3">Get all students with their IDs and names</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/students')">Copy</button>
+                                    curl http://localhost:8000/api/students
+                                </div>
+                                <div class="text-xs text-slate-500 mt-2">
+                                    <strong>Response:</strong><br>
+                                    [{"id": "S001", "name": "Alex"}, {"id": "S002", "name": "Bella"}]
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reports API -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-3">Student Reports</h4>
+                            <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">GET</span>
+                                    <span class="font-mono text-sm">/api/report/{student_id}</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3">Get comprehensive student report with AI recommendations</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/report/S001')">Copy</button>
+                                    curl http://localhost:8000/api/report/S001
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Logs API -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-3">Activity Logs</h4>
+                            <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">GET</span>
+                                    <span class="font-mono text-sm">/api/activity-logs</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3">Get all student activity logs with detailed metrics</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/activity-logs')">Copy</button>
+                                    curl http://localhost:8000/api/activity-logs
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent APIs -->
+                <div class="glass p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Agentic AI APIs</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Behavior Analysis Agent -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-3">Behavior Analysis Agent</h4>
+                            <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-mono text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">GET</span>
+                                    <span class="font-mono text-sm">/api/agents/behavior/{student_id}</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3">Advanced behavioral pattern analysis with risk factor identification</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/agents/behavior/S001')">Copy</button>
+                                    curl http://localhost:8000/api/agents/behavior/S001
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Learning Path Agent -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-3">Learning Path Agent</h4>
+                            <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">GET</span>
+                                    <span class="font-mono text-sm">/api/agents/learning-path/{student_id}</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3">Personalized learning paths with milestones and resources</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/agents/learning-path/S001')">Copy</button>
+                                    curl http://localhost:8000/api/agents/learning-path/S001
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Intervention Agent -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-3">Intervention Agent</h4>
+                            <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-mono text-sm bg-red-100 text-red-800 px-2 py-1 rounded">GET</span>
+                                    <span class="font-mono text-sm">/api/agents/intervention/{student_id}</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3">Targeted intervention strategies with urgency assessment</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/agents/intervention/S001')">Copy</button>
+                                    curl http://localhost:8000/api/agents/intervention/S001
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comprehensive Analysis -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-3">Comprehensive Analysis</h4>
+                            <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-mono text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">GET</span>
+                                    <span class="font-mono text-sm">/api/agents/comprehensive/{student_id}</span>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3">All agents combined for complete student analysis</p>
+                                <div class="code-block">
+                                    <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/agents/comprehensive/S001')">Copy</button>
+                                    curl http://localhost:8000/api/agents/comprehensive/S001
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Tab -->
+        <div id="view-agents" class="hidden">
+            <div class="glass p-8 rounded-2xl shadow-lg">
+                <h3 class="text-2xl font-bold text-slate-800 mb-6">Agent Capabilities</h3>
+                
+                <div class="space-y-6">
+                    <!-- Behavior Analysis Agent Details -->
+                    <div class="bg-blue-50 border border-blue-200 p-6 rounded-xl">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-4">🧠 Behavior Analysis Agent</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h5 class="font-medium text-blue-700 mb-2">Purpose</h5>
+                                <p class="text-sm text-blue-600">Analyzes student behavior patterns and identifies risk factors</p>
+                            </div>
+                            <div>
+                                <h5 class="font-medium text-blue-700 mb-2">Key Features</h5>
+                                <ul class="text-sm text-blue-600 space-y-1">
+                                    <li>• Risk factor identification</li>
+                                    <li>• Confidence scoring</li>
+                                    <li>• Pattern recognition</li>
+                                    <li>• Behavioral trend analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-blue-600">
+                            <strong>Best for:</strong> Early identification of at-risk students and behavioral issues
+                        </div>
+                    </div>
+
+                    <!-- Learning Path Agent Details -->
+                    <div class="bg-green-50 border border-green-200 p-6 rounded-xl">
+                        <h4 class="text-lg font-semibold text-green-800 mb-4">📚 Learning Path Agent</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h5 class="font-medium text-green-700 mb-2">Purpose</h5>
+                                <p class="text-sm text-green-600">Creates personalized learning paths based on performance</p>
+                            </div>
+                            <div>
+                                <h5 class="font-medium text-green-700 mb-2">Key Features</h5>
+                                <ul class="text-sm text-green-600 space-y-1">
+                                    <li>• Adaptive learning levels</li>
+                                    <li>• Milestone generation</li>
+                                    <li>• Resource identification</li>
+                                    <li>• Duration estimation</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-green-600">
+                            <strong>Best for:</strong> Personalized education plans and skill development tracking
+                        </div>
+                    </div>
+
+                    <!-- Intervention Agent Details -->
+                    <div class="bg-red-50 border border-red-200 p-6 rounded-xl">
+                        <h4 class="text-lg font-semibold text-red-800 mb-4">🚨 Intervention Agent</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h5 class="font-medium text-red-700 mb-2">Purpose</h5>
+                                <p class="text-sm text-red-600">Recommends targeted interventions for at-risk students</p>
+                            </div>
+                            <div>
+                                <h5 class="font-medium text-red-700 mb-2">Key Features</h5>
+                                <ul class="text-sm text-red-600 space-y-1">
+                                    <li>• Urgency assessment</li>
+                                    <li>• Intervention strategies</li>
+                                    <li>• Success metrics definition</li>
+                                    <li>• Timeline creation</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-red-600">
+                            <strong>Best for:</strong> Proactive student support and intervention planning
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Examples Tab -->
+        <div id="view-examples" class="hidden">
+            <div class="space-y-8">
+                <!-- JavaScript Example -->
+                <div class="glass p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">JavaScript Integration Example</h3>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200">
+                        <div class="code-block text-sm">
+                            <button class="copy-btn" onclick="copyToClipboard(jsIntegrationCode)">Copy</button>
+                            <div id="jsIntegrationCode">// Student Behavior Analytics Integration
+class StudentAnalyticsAPI {
+    constructor(baseURL = 'http://localhost:8000') {
+        this.baseURL = baseURL;
+    }
+
+    // Get all students
+    async getStudents() {
+        const response = await fetch(`${this.baseURL}/api/students`);
+        return await response.json();
+    }
+
+    // Get student report
+    async getStudentReport(studentId) {
+        const response = await fetch(`${this.baseURL}/api/report/${studentId}`);
+        return await response.json();
+    }
+
+    // Run behavior analysis agent
+    async analyzeBehavior(studentId) {
+        const response = await fetch(`${this.baseURL}/api/agents/behavior/${studentId}`);
+        return await response.json();
+    }
+
+    // Create learning path
+    async createLearningPath(studentId) {
+        const response = await fetch(`${this.baseURL}/api/agents/learning-path/${studentId}`);
+        return await response.json();
+    }
+
+    // Get intervention recommendations
+    async getInterventions(studentId) {
+        const response = await fetch(`${this.baseURL}/api/agents/intervention/${studentId}`);
+        return await response.json();
+    }
+
+    // Comprehensive analysis using all agents
+    async getComprehensiveAnalysis(studentId) {
+        const response = await fetch(`${this.baseURL}/api/agents/comprehensive/${studentId}`);
+        return await response.json();
+    }
+}
+
+// Usage example
+const analytics = new StudentAnalyticsAPI();
+
+// Get student list
+const students = await analytics.getStudents();
+console.log('Students:', students);
+
+// Get comprehensive analysis for Alex
+const alexAnalysis = await analytics.getComprehensiveAnalysis('S001');
+console.log('Alex Analysis:', alexAnalysis);
+
+// Display risk level and recommendations
+if (alexAnalysis.summary.overall_risk_level === 'High') {
+    alert('High-risk student detected! Immediate intervention recommended.');
+}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Python Example -->
+                <div class="glass p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Python Integration Example</h3>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200">
+                        <div class="code-block text-sm">
+                            <button class="copy-btn" onclick="copyToClipboard(pyIntegrationCode)">Copy</button>
+                            <div id="pyIntegrationCode">import requests
+import json
+
+class StudentAnalyticsAPI:
+    def __init__(self, base_url='http://localhost:8000'):
+        self.base_url = base_url
+
+    def get_students(self):
+        """Get all students"""
+        response = requests.get(f'{self.base_url}/api/students')
+        return response.json()
+
+    def get_student_report(self, student_id):
+        """Get comprehensive student report"""
+        response = requests.get(f'{self.base_url}/api/report/{student_id}')
+        return response.json()
+
+    def analyze_behavior(self, student_id):
+        """Run behavior analysis agent"""
+        response = requests.get(f'{self.base_url}/api/agents/behavior/{student_id}')
+        return response.json()
+
+    def create_learning_path(self, student_id):
+        """Create personalized learning path"""
+        response = requests.get(f'{self.base_url}/api/agents/learning-path/{student_id}')
+        return response.json()
+
+    def get_interventions(self, student_id):
+        """Get intervention recommendations"""
+        response = requests.get(f'{self.base_url}/api/agents/intervention/{student_id}')
+        return response.json()
+
+    def get_comprehensive_analysis(self, student_id):
+        """Get analysis from all agents"""
+        response = requests.get(f'{self.base_url}/api/agents/comprehensive/{student_id}')
+        return response.json()
+
+# Usage example
+analytics = StudentAnalyticsAPI()
+
+# Get all students
+students = analytics.get_students()
+print(f"Students: {students}")
+
+# Get comprehensive analysis for Alex
+alex_analysis = analytics.get_comprehensive_analysis('S001')
+print(f"Alex Analysis: {json.dumps(alex_analysis, indent=2)}")
+
+# Check if intervention is needed
+risk_level = alex_analysis['summary']['overall_risk_level']
+if risk_level in ['Critical', 'High']:
+    print("⚠️ High-risk student detected! Immediate intervention recommended.")
+    print(f"Recommended actions: {', '.join(alex_analysis['summary']['recommended_actions'])}")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- React Example -->
+                <div class="glass p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">React Integration Example</h3>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200">
+                        <div class="code-block text-sm">
+                            <button class="copy-btn" onclick="copyToClipboard(reactIntegrationCode)">Copy</button>
+                            <div id="reactIntegrationCode">import React, { useState, useEffect } from 'react';
+
+const StudentAnalyticsAPI = {
+    baseURL: 'http://localhost:8000',
+    
+    async getStudents() {
+        const response = await fetch(`${this.baseURL}/api/students`);
+        return await response.json();
+    },
+    
+    async getComprehensiveAnalysis(studentId) {
+        const response = await fetch(`${this.baseURL}/api/agents/comprehensive/${studentId}`);
+        return await response.json();
+    }
+};
+
+function StudentDashboard() {
+    const [students, setStudents] = useState([]);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const [analysis, setAnalysis] = useState(null);
+
+    useEffect(() => {
+        // Load students on component mount
+        StudentAnalyticsAPI.getStudents().then(setStudents);
+    }, []);
+
+    const handleStudentSelect = async (studentId) => {
+        setSelectedStudent(studentId);
+        const analysis = await StudentAnalyticsAPI.getComprehensiveAnalysis(studentId);
+        setAnalysis(analysis);
+    };
+
+    return (
+        <div className="p-6">
+            <h2>Student Behavior Analytics</h2>
+            
+            <select onChange={(e) => handleStudentSelect(e.target.value)}>
+                <option value="">Select a student...</option>
+                {students.map(student => (
+                    <option key={student.id} value={student.id}>
+                        {student.name} ({student.id})
+                    </option>
+                ))}
+            </select>
+            
+            {analysis && (
+                <div className="mt-6 p-4 bg-white rounded-lg shadow">
+                    <h3>Analysis Results</h3>
+                    <p><strong>Risk Level:</strong> {analysis.summary.overall_risk_level}</p>
+                    <p><strong>Success Probability:</strong> {(analysis.summary.success_probability * 100).toFixed(1)}%</p>
+                    <div>
+                        <strong>Recommended Actions:</strong>
+                        <ul>
+                            {analysis.summary.recommended_actions.map((action, index) => (
+                                <li key={index}>{action}</li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default StudentDashboard;</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deployment Tab -->
+        <div id="view-deployment" class="hidden">
+            <div class="space-y-8">
+                <!-- Local Development -->
+                <div class="glass p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Local Development Setup</h3>
+                    <div class="space-y-4">
+                        <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-800 mb-2">✅ Prerequisites</h4>
+                            <ul class="text-sm text-green-700 space-y-1">
+                                <li>• Python 3.11+ installed</li>
+                                <li>• Network access to localhost:8000</li>
+                                <li>• Student behavior data in SQLite database</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-800 mb-2">🚀 Quick Start</h4>
+                            <div class="code-block text-sm">
+                                <button class="copy-btn" onclick="copyToClipboard('# Clone or download the project\\ngit clone https://github.com/your-repo/student-behavior-analytics\\ncd student-behavior-analytics\\n\\n# Install dependencies\\npip install -r requirements.txt\\n\\n# Set environment variables\\nexport OPENAI_API_KEY="your-api-key"\\n\\n# Start the service\\npython main.py')">Copy</button>
+                                # Clone or download the project
+git clone https://github.com/your-repo/student-behavior-analytics
+cd student-behavior-analytics
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+export OPENAI_API_KEY="your-api-key"
+
+# Start the service
+python main.py
+                            </div>
+                        </div>
+                        
+                        <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                            <h4 class="font-semibold text-orange-800 mb-2">🔧 Configuration</h4>
+                            <div class="text-sm text-orange-700 space-y-2">
+                                <p><strong>Database:</strong> Ensure behavior.db exists in project root</p>
+                                <p><strong>API Key:</strong> Set OPENAI_API_KEY environment variable</p>
+                                <p><strong>Port:</strong> Service runs on port 8000 by default</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Production Deployment -->
+                <div class="glass p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">Production Deployment</h3>
+                    <div class="space-y-4">
+                        <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg">
+                            <h4 class="font-semibold text-purple-800 mb-2">🌐 Docker Deployment</h4>
+                            <div class="code-block text-sm">
+                                <button class="copy-btn" onclick="copyToClipboard('# Build Docker image\\ndocker build -t student-behavior-analytics .\\n\\n# Run container\\ndocker run -p 8000:8000 -e OPENAI_API_KEY=your-key student-behavior-analytics')">Copy</button>
+                                # Build Docker image
+docker build -t student-behavior-analytics .
+
+# Run container
+docker run -p 8000:8000 -e OPENAI_API_KEY=your-key student-behavior-analytics
+                            </div>
+                        </div>
+                        
+                        <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-lg">
+                            <h4 class="font-semibold text-indigo-800 mb-2">☁️ Cloud Deployment</h4>
+                            <div class="text-sm text-indigo-700 space-y-2">
+                                <p><strong>AWS:</strong> Deploy to ECS or Lambda with API Gateway</p>
+                                <p><strong>Azure:</strong> Use App Service or Container Instances</p>
+                                <p><strong>GCP:</strong> Deploy to Cloud Run or App Engine</p>
+                                <p><strong>Heroku:</strong> Deploy as container web service</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                            <h4 class="font-semibold text-red-800 mb-2">🛡️ Security Considerations</h4>
+                            <div class="text-sm text-red-700 space-y-2">
+                                <p><strong>API Security:</strong> Implement client-side authentication</p>
+                                <p><strong>Data Privacy:</strong> Ensure GDPR compliance for student data</p>
+                                <p><strong>Rate Limiting:</strong> Add API rate limiting in production</p>
+                                <p><strong>Monitoring:</strong> Set up logging and error tracking</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        const tabs = ['overview', 'apis', 'agents', 'examples', 'deployment'];
+        
+        tabs.forEach(tab => {
+            const tabBtn = document.getElementById(`tab-${tab}`);
+            const view = document.getElementById(`view-${tab}`);
+            
+            tabBtn.addEventListener('click', () => {
+                // Update tabs
+                document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('text-slate-400');
+                });
+                tabBtn.classList.add('tab-active');
+                tabBtn.classList.remove('text-slate-400');
+                
+                // Update views
+                document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+                view.classList.remove('hidden');
+            });
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show success feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('bg-green-600');
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('bg-green-600');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        // Integration code examples
+        const jsIntegrationCode = document.getElementById('jsIntegrationCode').textContent;
+        const pyIntegrationCode = document.getElementById('pyIntegrationCode').textContent;
+        const reactIntegrationCode = document.getElementById('reactIntegrationCode').textContent;
+    </script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Framework - Student Behavior Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .tab-active {
+            border-bottom: 3px solid #4f46e5;
+            color: #4f46e5;
+        }
+        .agent-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .agent-card:hover {
+            border-color: #4f46e5;
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .capability-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen text-slate-900">
+    <!-- Navigation Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-indigo-900">Student Behavior Analytics</h1>
+                    <span class="ml-4 px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full">Agentic AI</span>
+                </div>
+                <nav class="flex space-x-8">
+                    <a href="/" class="text-slate-500 hover:text-indigo-600 transition-colors">Dashboard</a>
+                    <a href="/dashboard" class="text-slate-500 hover:text-indigo-600 transition-colors">Testing</a>
+                    <a href="/agents" class="text-indigo-600 font-semibold border-b-2 border-indigo-600">Agents</a>
+                    <a href="/monitor" class="text-slate-500 hover:text-indigo-600 transition-colors">Monitor</a>
+                    <a href="/docs" class="text-slate-500 hover:text-indigo-600 transition-colors">Integration</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-indigo-900 mb-4">Agentic AI Framework</h1>
+            <p class="text-xl text-slate-600 max-w-3xl mx-auto">Three specialized AI agents working together to provide comprehensive student behavior analysis and intervention strategies</p>
+        </div>
+
+        <!-- Agents Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <!-- Behavior Analysis Agent -->
+            <div class="agent-card glass p-8 rounded-2xl shadow-lg">
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-slate-800">Behavior Analysis Agent</h3>
+                        <p class="text-sm text-slate-500">Pattern Recognition & Risk Assessment</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-slate-700 mb-2">Capabilities</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="capability-badge">Behavior Pattern Analysis</span>
+                            <span class="capability-badge">Risk Factor ID</span>
+                            <span class="capability-badge">Confidence Scoring</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-slate-700 mb-2">Key Functions</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Identifies at-risk behavioral patterns</li>
+                            <li>• Calculates confidence scores for analysis</li>
+                            <li>• Generates specific risk factor recommendations</li>
+                        </ul>
+                    </div>
+                    
+                    <button onclick="testAgent('behavior')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        Test Behavior Agent
+                    </button>
+                </div>
+            </div>
+
+            <!-- Learning Path Agent -->
+            <div class="agent-card glass p-8 rounded-2xl shadow-lg">
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7m0 0v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-slate-800">Learning Path Agent</h3>
+                        <p class="text-sm text-slate-500">Personalized Learning & Development</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-slate-700 mb-2">Capabilities</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="capability-badge">Learning Path Creation</span>
+                            <span class="capability-badge">Milestone Generation</span>
+                            <span class="capability-badge">Resource ID</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-slate-700 mb-2">Key Functions</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Creates personalized learning paths</li>
+                            <li>• Generates achievement milestones</li>
+                            <li>• Identifies required learning resources</li>
+                        </ul>
+                    </div>
+                    
+                    <button onclick="testAgent('learning')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                        Test Learning Agent
+                    </button>
+                </div>
+            </div>
+
+            <!-- Intervention Agent -->
+            <div class="agent-card glass p-8 rounded-2xl shadow-lg">
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-slate-800">Intervention Agent</h3>
+                        <p class="text-sm text-slate-500">Targeted Support & Success Metrics</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-slate-700 mb-2">Capabilities</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="capability-badge">Intervention Strategies</span>
+                            <span class="capability-badge">Urgency Assessment</span>
+                            <span class="capability-badge">Success Metrics</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-slate-700 mb-2">Key Functions</h4>
+                        <ul class="text-sm text-slate-600 space-y-1">
+                            <li>• Recommends targeted interventions</li>
+                            <li>• Assesses intervention urgency levels</li>
+                            <li>• Defines success metrics & timelines</li>
+                        </ul>
+                    </div>
+                    
+                    <button onclick="testAgent('intervention')" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                        Test Intervention Agent
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Testing Section -->
+        <div class="glass p-8 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Live Agent Testing</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Select Student</label>
+                    <select id="test-student" class="w-full p-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Choose a student...</option>
+                        <option value="S001">Alex (S001)</option>
+                        <option value="S002">Bella (S002)</option>
+                        <option value="S003">Charlie (S003)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Analysis Type</label>
+                    <select id="test-type" class="w-full p-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500">
+                        <option value="comprehensive">Comprehensive Analysis (All Agents)</option>
+                        <option value="behavior">Behavior Analysis Only</option>
+                        <option value="learning">Learning Path Only</option>
+                        <option value="intervention">Intervention Plan Only</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button onclick="runAgentTest()" class="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+                    Run Agent Analysis
+                </button>
+                <button onclick="clearResults()" class="px-6 py-3 bg-slate-600 text-white rounded-xl font-semibold hover:bg-slate-700 transition-colors">
+                    Clear Results
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="hidden">
+            <div class="glass p-8 rounded-2xl shadow-lg">
+                <h3 class="text-xl font-bold text-slate-800 mb-6">Agent Analysis Results</h3>
+                <div id="agent-results" class="space-y-6">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration Guide -->
+        <div class="glass p-8 rounded-2xl shadow-lg">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Integration Guide</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-4">How to Use in Your Project</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-medium text-slate-600 mb-2">1. Direct API Integration</h4>
+                            <div class="bg-slate-900 text-slate-100 p-4 rounded-lg text-sm font-mono">
+                                curl http://localhost:8000/api/agents/comprehensive/S001
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-slate-600 mb-2">2. Individual Agent Calls</h4>
+                            <div class="space-y-2">
+                                <div class="bg-slate-900 text-slate-100 p-3 rounded-lg text-sm font-mono">
+                                    /api/agents/behavior/{student_id}
+                                </div>
+                                <div class="bg-slate-900 text-slate-100 p-3 rounded-lg text-sm font-mono">
+                                    /api/agents/learning-path/{student_id}
+                                </div>
+                                <div class="bg-slate-900 text-slate-100 p-3 rounded-lg text-sm font-mono">
+                                    /api/agents/intervention/{student_id}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-4">Why Use This System</h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                            <h4 class="font-medium text-blue-800 mb-2">🎯 Specialized Expertise</h4>
+                            <p class="text-sm text-blue-700">Each agent focuses on specific aspects: behavior patterns, learning paths, and interventions - providing deeper insights than general AI.</p>
+                        </div>
+                        <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                            <h4 class="font-medium text-green-800 mb-2">🔄 Real-time Processing</h4>
+                            <p class="text-sm text-green-700">Agents analyze live student data and provide immediate, actionable recommendations based on current performance.</p>
+                        </div>
+                        <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                            <h4 class="font-medium text-red-800 mb-2">⚡ Proactive Intervention</h4>
+                            <p class="text-sm text-red-700">System identifies at-risk students automatically and suggests specific interventions before issues escalate.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentResults = {};
+
+        // Test individual agent
+        async function testAgent(agentType) {
+            const studentId = document.getElementById('test-student').value;
+            if (!studentId) {
+                showNotification('Please select a student first', 'warning');
+                return;
+            }
+
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Testing...';
+            button.disabled = true;
+
+            try {
+                let endpoint;
+                switch(agentType) {
+                    case 'behavior':
+                        endpoint = `/api/agents/behavior/${studentId}`;
+                        break;
+                    case 'learning':
+                        endpoint = `/api/agents/learning-path/${studentId}`;
+                        break;
+                    case 'intervention':
+                        endpoint = `/api/agents/intervention/${studentId}`;
+                        break;
+                }
+
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data, agentType);
+                    showNotification(`${agentType.charAt(0).toUpperCase() + agentType.slice(1)} Agent completed successfully`, 'success');
+                } else {
+                    showNotification(`Agent test failed: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Error testing agent: ${error.message}`, 'error');
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Run comprehensive analysis
+        async function runAgentTest() {
+            const studentId = document.getElementById('test-student').value;
+            const testType = document.getElementById('test-type').value;
+            
+            if (!studentId) {
+                showNotification('Please select a student first', 'warning');
+                return;
+            }
+
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Analyzing...';
+            button.disabled = true;
+
+            try {
+                let endpoint;
+                switch(testType) {
+                    case 'comprehensive':
+                        endpoint = `/api/agents/comprehensive/${studentId}`;
+                        break;
+                    case 'behavior':
+                        endpoint = `/api/agents/behavior/${studentId}`;
+                        break;
+                    case 'learning':
+                        endpoint = `/api/agents/learning-path/${studentId}`;
+                        break;
+                    case 'intervention':
+                        endpoint = `/api/agents/intervention/${studentId}`;
+                        break;
+                }
+
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data, testType);
+                    showNotification('Analysis completed successfully', 'success');
+                } else {
+                    showNotification(`Analysis failed: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`Error running analysis: ${error.message}`, 'error');
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Display results
+        function displayResults(data, testType) {
+            const resultsSection = document.getElementById('results-section');
+            const resultsContainer = document.getElementById('agent-results');
+            
+            resultsSection.classList.remove('hidden');
+            
+            if (testType === 'comprehensive') {
+                resultsContainer.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        ${displayAgentResult(data.comprehensive_analysis.behavior_analysis, 'Behavior Analysis', 'blue')}
+                        ${displayAgentResult(data.comprehensive_analysis.learning_path, 'Learning Path', 'green')}
+                        ${displayAgentResult(data.comprehensive_analysis.intervention_plan, 'Intervention Plan', 'red')}
+                    </div>
+                    <div class="mt-6 bg-indigo-50 border border-indigo-200 p-6 rounded-xl">
+                        <h4 class="font-semibold text-indigo-800 mb-3">Summary</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <span class="text-slate-500">Risk Level:</span>
+                                <span class="font-semibold ${data.summary.overall_risk_level === 'Critical' ? 'text-red-600' : data.summary.overall_risk_level === 'High' ? 'text-orange-600' : 'text-green-600'}">${data.summary.overall_risk_level}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500">Success Probability:</span>
+                                <span class="font-semibold text-blue-600">${(data.summary.success_probability * 100).toFixed(1)}%</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500">Recommended Actions:</span>
+                                <ul class="mt-1">
+                                    ${data.summary.recommended_actions.map(action => `<li class="text-indigo-600">• ${action}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultsContainer.innerHTML = displayAgentResult(data, testType.charAt(0).toUpperCase() + testType.slice(1), getColorForType(testType));
+            }
+        }
+
+        // Display individual agent result
+        function displayAgentResult(data, title, color) {
+            const colorClasses = {
+                blue: 'border-blue-200 bg-blue-50',
+                green: 'border-green-200 bg-green-50',
+                red: 'border-red-200 bg-red-50'
+            };
+
+            return `
+                <div class="border-2 ${colorClasses[color]} p-6 rounded-xl">
+                    <h4 class="font-semibold text-slate-800 mb-4">${title}</h4>
+                    <div class="space-y-3">
+                        ${data.agent ? `<div class="text-sm"><span class="font-medium">Agent:</span> ${data.agent}</div>` : ''}
+                        ${data.learning_level ? `<div class="text-sm"><span class="font-medium">Learning Level:</span> ${data.learning_level}</div>` : ''}
+                        ${data.urgency_level ? `<div class="text-sm"><span class="font-medium">Urgency:</span> <span class="font-semibold ${data.urgency_level === 'Critical' ? 'text-red-600' : data.urgency_level === 'High' ? 'text-orange-600' : 'text-green-600'}">${data.urgency_level}</span></div>` : ''}
+                        ${data.confidence_score ? `<div class="text-sm"><span class="font-medium">Confidence:</span> ${(data.confidence_score * 100).toFixed(1)}%</div>` : ''}
+                        ${data.risk_factors ? `<div class="text-sm"><span class="font-medium">Risk Factors:</span> ${data.risk_factors.join(', ')}</div>` : ''}
+                        ${data.milestones ? `<div class="text-sm"><span class="font-medium">Milestones:</span> ${data.milestones.slice(0, 3).join(', ')}...</div>` : ''}
+                        ${data.intervention_strategies ? `<div class="text-sm"><span class="font-medium">Strategies:</span> ${data.intervention_strategies.slice(0, 3).join(', ')}...</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getColorForType(type) {
+            const colors = {
+                behavior: 'blue',
+                learning: 'green',
+                intervention: 'red'
+            };
+            return colors[type] || 'blue';
+        }
+
+        // Clear results
+        function clearResults() {
+            document.getElementById('results-section').classList.add('hidden');
+            document.getElementById('agent-results').innerHTML = '';
+            showNotification('Results cleared', 'info');
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColors = {
+                success: 'bg-green-100 border-green-400 text-green-800',
+                error: 'bg-red-100 border-red-400 text-red-800',
+                warning: 'bg-yellow-100 border-yellow-400 text-yellow-800',
+                info: 'bg-blue-100 border-blue-400 text-blue-800'
+            };
+            
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg border ${bgColors[type]} z-50 max-w-sm`;
+            notification.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-lg leading-none">&times;</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+
+        // Load students on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Could fetch students from API if needed
+            console.log('Agentic AI Framework loaded successfully');
+        });
+    </script>
+</body>
+</html>

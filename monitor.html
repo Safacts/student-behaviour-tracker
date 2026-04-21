@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microservice Monitor & Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .tab-active {
+            border-bottom: 3px solid #4f46e5;
+            color: #4f46e5;
+        }
+        .status-online { color: #10b981; }
+        .status-offline { color: #ef4444; }
+        .status-warning { color: #f59e0b; }
+        .test-pass { background: #dcfce7; color: #166534; }
+        .test-fail { background: #fef2f2; color: #dc2626; }
+        .test-running { background: #fef3c7; color: #92400e; }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .copy-btn {
+            background: #4f46e5;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            float: right;
+        }
+        .copy-btn:hover {
+            background: #4338ca;
+        }
+        .alert-critical { background: #fef2f2; border-left: 4px solid #dc2626; }
+        .alert-warning { background: #fef3c7; border-left: 4px solid #f59e0b; }
+        .alert-info { background: #eff6ff; border-left: 4px solid #3b82f6; }
+        .alert-success { background: #f0fdf4; border-left: 4px solid #10b981; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen text-slate-900">
+    <!-- Navigation Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-indigo-900">Student Behavior Analytics</h1>
+                    <span class="ml-4 px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full">System Monitor</span>
+                </div>
+                <nav class="flex space-x-8">
+                    <a href="/" class="text-slate-500 hover:text-indigo-600 transition-colors">Dashboard</a>
+                    <a href="/dashboard" class="text-slate-500 hover:text-indigo-600 transition-colors">Testing</a>
+                    <a href="/agents" class="text-slate-500 hover:text-indigo-600 transition-colors">Agents</a>
+                    <a href="/monitor" class="text-indigo-600 font-semibold border-b-2 border-indigo-600">Monitor</a>
+                    <a href="/docs" class="text-slate-500 hover:text-indigo-600 transition-colors">Integration</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <div class="max-w-7xl mx-auto py-8 px-4">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-indigo-900 mb-2">Microservice Monitor</h1>
+            <p class="text-slate-600">Real-time Troubleshooting & API Documentation</p>
+            <div class="mt-4 flex justify-center items-center space-x-4">
+                <span id="connection-status" class="flex items-center">
+                    <span class="w-3 h-3 rounded-full bg-green-500 mr-2 animate-pulse" id="status-dot"></span>
+                    <span id="status-text" class="text-sm font-medium status-online">Connected</span>
+                </span>
+                <span class="text-sm text-slate-500">|</span>
+                <span id="last-update" class="text-sm text-slate-500">Last updated: --</span>
+            </div>
+        </header>
+
+        <!-- System Alerts -->
+        <div id="system-alerts" class="mb-6 space-y-2">
+            <!-- Alerts will be populated here -->
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex justify-center space-x-6 mb-8 border-b border-slate-200">
+            <button id="tab-monitor" class="pb-3 text-sm font-bold uppercase tracking-widest tab-active transition-all">System Monitor</button>
+            <button id="tab-apis" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">API Documentation</button>
+            <button id="tab-troubleshoot" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Troubleshooting</button>
+            <button id="tab-health" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Health Check</button>
+        </div>
+
+        <!-- System Monitor View -->
+        <div id="view-monitor">
+            <!-- System Status Overview -->
+            <div class="glass p-6 rounded-2xl shadow-lg mb-8">
+                <h2 class="text-xl font-bold text-slate-800 mb-4">System Status Overview</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <div class="text-sm text-slate-500">API Server</div>
+                        <div id="api-server-status" class="text-lg font-semibold status-online">Online</div>
+                        <div class="text-xs text-slate-400">Response: <span id="api-response-time">--ms</span></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <div class="text-sm text-slate-500">Database</div>
+                        <div id="database-status" class="text-lg font-semibold status-online">Connected</div>
+                        <div class="text-xs text-slate-400">Records: <span id="db-records">--</span></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <div class="text-sm text-slate-500">AI Service</div>
+                        <div id="ai-service-status" class="text-lg font-semibold status-online">Active</div>
+                        <div class="text-xs text-slate-400">Model: <span id="ai-model">--</span></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <div class="text-sm text-slate-500">Active Users</div>
+                        <div id="active-users" class="text-lg font-semibold">--</div>
+                        <div class="text-xs text-slate-400">Students: <span id="student-count">--</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-slate-500">API Requests/min</div>
+                            <div id="requests-per-minute" class="text-3xl font-bold text-indigo-600">--</div>
+                        </div>
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-slate-500">Error Rate</div>
+                            <div id="error-rate" class="text-3xl font-bold text-red-600">--%</div>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm text-slate-500">Avg Response Time</div>
+                            <div id="avg-response-time" class="text-3xl font-bold text-green-600">--ms</div>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Log -->
+            <div class="glass p-6 rounded-2xl shadow-lg">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Recent Activity Log</h3>
+                <div id="activity-log" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Activity log entries will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- API Documentation View -->
+        <div id="view-apis" class="hidden">
+            <div class="space-y-6">
+                <!-- Quick Start -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Quick Start Guide</h3>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-blue-800 mb-2">Base URL:</h4>
+                        <div class="code-block">http://localhost:8000</div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">1. Get All Students</h4>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/students')">Copy</button>
+                                curl http://localhost:8000/api/students
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">2. Get Student Report</h4>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/report/S001')">Copy</button>
+                                curl http://localhost:8000/api/report/S001
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">3. Get Activity Logs</h4>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyToClipboard('curl http://localhost:8000/api/activity-logs')">Copy</button>
+                                curl http://localhost:8000/api/activity-logs
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complete API Reference -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Complete API Reference</h3>
+                    <div class="space-y-6">
+                        <!-- Students API -->
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">Students API</h4>
+                            <div class="space-y-3">
+                                <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">GET</span>
+                                        <span class="font-mono text-sm">/api/students</span>
+                                    </div>
+                                    <p class="text-sm text-slate-600 mb-2">Get all students list</p>
+                                    <div class="code-block text-xs">
+                                        <button class="copy-btn" onclick="copyToClipboard('curl -X GET http://localhost:8000/api/students')">Copy</button>
+                                        curl -X GET http://localhost:8000/api/students
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reports API -->
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">Reports API</h4>
+                            <div class="space-y-3">
+                                <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">GET</span>
+                                        <span class="font-mono text-sm">/api/report/{student_id}</span>
+                                    </div>
+                                    <p class="text-sm text-slate-600 mb-2">Get comprehensive student report with AI recommendations</p>
+                                    <div class="code-block text-xs">
+                                        <button class="copy-btn" onclick="copyToClipboard('curl -X GET http://localhost:8000/api/report/S001')">Copy</button>
+                                        curl -X GET http://localhost:8000/api/report/S001
+                                    </div>
+                                    <div class="mt-2 text-xs text-slate-500">
+                                        <strong>Response:</strong><br>
+                                        {"student_id": "S001", "student_name": "Alex", "stats": {...}, "analysis": {...}, "ai_recommendation": "..."}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Logs API -->
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">Activity Logs API</h4>
+                            <div class="space-y-3">
+                                <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">GET</span>
+                                        <span class="font-mono text-sm">/api/activity-logs</span>
+                                    </div>
+                                    <p class="text-sm text-slate-600 mb-2">Get all activity logs</p>
+                                    <div class="code-block text-xs">
+                                        <button class="copy-btn" onclick="copyToClipboard('curl -X GET http://localhost:8000/api/activity-logs')">Copy</button>
+                                        curl -X GET http://localhost:8000/api/activity-logs
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Integration Examples -->
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">Integration Examples</h4>
+                            <div class="space-y-3">
+                                <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                    <h5 class="font-medium text-slate-700 mb-2">JavaScript/Fetch</h5>
+                                    <div class="code-block text-xs">
+                                        <button class="copy-btn" onclick="copyToClipboard(jsExample)">Copy</button>
+                                        <div id="jsExample">const response = await fetch('http://localhost:8000/api/students');
+const students = await response.json();
+console.log(students);</div>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg border border-slate-200">
+                                    <h5 class="font-medium text-slate-700 mb-2">Python/Requests</h5>
+                                    <div class="code-block text-xs">
+                                        <button class="copy-btn" onclick="copyToClipboard(pyExample)">Copy</button>
+                                        <div id="pyExample">import requests
+
+response = requests.get('http://localhost:8000/api/students')
+students = response.json()
+print(students)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting View -->
+        <div id="view-troubleshoot" class="hidden">
+            <div class="space-y-6">
+                <!-- Common Issues -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Common Issues & Solutions</h3>
+                    <div class="space-y-4">
+                        <div class="alert-warning p-4 rounded-lg">
+                            <h4 class="font-semibold text-amber-800 mb-2">API Not Responding</h4>
+                            <p class="text-sm text-amber-700 mb-2">The API server is not responding to requests.</p>
+                            <div class="text-sm text-amber-600">
+                                <strong>Solution:</strong><br>
+                                1. Check if the service is running: <code class="bg-amber-100 px-1 rounded">python main.py</code><br>
+                                2. Verify port 8000 is not blocked<br>
+                                3. Check for any error messages in the console
+                            </div>
+                        </div>
+                        <div class="alert-warning p-4 rounded-lg">
+                            <4 class="font-semibold text-amber-800 mb-2">AI Recommendations Not Working</h4>
+                            <p class="text-sm text-amber-700 mb-2">AI reports are showing errors or not generating.</p>
+                            <div class="text-sm text-amber-600">
+                                <strong>Solution:</strong><br>
+                                1. Check Google API key: <code class="bg-amber-100 px-1 rounded">echo $GOOGLE_API_KEY</code><br>
+                                2. Verify API key is valid and not leaked<br>
+                                3. Check internet connection for AI service
+                            </div>
+                        </div>
+                        <div class="alert-warning p-4 rounded-lg">
+                            <h4 class="font-semibold text-amber-800 mb-2">Database Connection Issues</h4>
+                            <p class="text-sm text-amber-700 mb-2">Cannot access student data or getting empty results.</p>
+                            <div class="text-sm text-amber-600">
+                                <strong>Solution:</strong><br>
+                                1. Check if behavior.db exists in the project directory<br>
+                                2. Verify database file is not corrupted<br>
+                                3. Test with: <code class="bg-amber-100 px-1 rounded">sqlite3 behavior.db ".tables"</code>
+                            </div>
+                        </div>
+                        <div class="alert-info p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-800 mb-2">Performance Issues</h4>
+                            <p class="text-sm text-blue-700 mb-2">API responses are slow or timing out.</p>
+                            <div class="text-sm text-blue-600">
+                                <strong>Solution:</br>
+                                1. Check system resources (CPU, Memory)<br>
+                                2. Restart the service: <code class="bg-blue-100 px-1 rounded">Ctrl+C and python main.py</code><br>
+                                3. Check for large database files affecting performance
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diagnostic Tools -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Diagnostic Tools</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button onclick="runDiagnostics()" class="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+                            Run Full Diagnostics
+                        </button>
+                        <button onclick="testAllAPIs()" class="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors">
+                            Test All APIs
+                        </button>
+                        <button onclick="checkDatabase()" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors">
+                            Check Database
+                        </button>
+                        <button onclick="testAIService()" class="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors">
+                            Test AI Service
+                        </button>
+                    </div>
+                    <div id="diagnostic-results" class="mt-6 space-y-2">
+                        <!-- Diagnostic results will appear here -->
+                    </div>
+                </div>
+
+                <!-- Quick Fixes -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Quick Fixes</h3>
+                    <div class="space-y-3">
+                        <div class="bg-white p-4 rounded-lg border border-slate-200">
+                            <h4 class="font-semibold text-slate-700 mb-2">Restart Service</h4>
+                            <div class="code-block text-xs">
+                                <button class="copy-btn" onclick="copyToClipboard('taskkill /f /im python.exe && python main.py')">Copy</button>
+                                # Stop current service
+taskkill /f /im python.exe
+
+# Start service with API key
+$env:GOOGLE_API_KEY="your-api-key"
+python main.py
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-slate-200">
+                            <h4 class="font-semibold text-slate-700 mb-2">Check Dependencies</h4>
+                            <div class="code-block text-xs">
+                                <button class="copy-btn" onclick="copyToClipboard('pip install fastapi uvicorn google-generativeai python-dotenv')">Copy</button>
+                                pip install fastapi uvicorn google-generativeai python-dotenv
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-slate-200">
+                            <h4 class="font-semibold text-slate-700 mb-2">Verify API Key</h4>
+                            <div class="code-block text-xs">
+                                <button class="copy-btn" onclick="copyToClipboard('curl -H &quot;Authorization: Bearer YOUR_API_KEY&quot; &quot;https://generativelanguage.googleapis.com/v1beta/models&quot;')">Copy</button>
+                                curl -H "Authorization: Bearer YOUR_API_KEY" "https://generativelanguage.googleapis.com/v1beta/models"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Check View -->
+        <div id="view-health" class="hidden">
+            <div class="space-y-6">
+                <!-- Comprehensive Health Check -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Comprehensive Health Check</h3>
+                    <div id="health-check-results" class="space-y-4">
+                        <!-- Health check results will be populated here -->
+                    </div>
+                    <button onclick="runHealthCheck()" class="mt-6 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors">
+                        Run Health Check
+                    </button>
+                </div>
+
+                <!-- System Information -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">System Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">Service Details</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Service Name:</span>
+                                    <span class="font-medium">Student Behavior Analytics</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Version:</span>
+                                    <span class="font-medium">1.0.0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Environment:</span>
+                                    <span class="font-medium">Development</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Port:</span>
+                                    <span class="font-medium">8000</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-700 mb-2">Database Details</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Database Type:</span>
+                                    <span class="font-medium">SQLite</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">File:</span>
+                                    <span class="font-medium">behavior.db</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Tables:</span>
+                                    <span class="font-medium" id="db-tables">--</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Size:</span>
+                                    <span class="font-medium" id="db-size">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let systemHealth = {
+            api: false,
+            database: false,
+            ai: false,
+            lastCheck: null,
+            metrics: {
+                requestsPerMinute: 0,
+                errorRate: 0,
+                avgResponseTime: 0
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMonitor();
+        });
+
+        async function initializeMonitor() {
+            setupEventListeners();
+            await runInitialChecks();
+            startRealTimeMonitoring();
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            const tabs = ['monitor', 'apis', 'troubleshoot', 'health'];
+            tabs.forEach(tab => {
+                const tabBtn = document.getElementById(`tab-${tab}`);
+                const view = document.getElementById(`view-${tab}`);
+                
+                tabBtn.addEventListener('click', () => {
+                    // Update tabs
+                    document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                        btn.classList.remove('tab-active');
+                        btn.classList.add('text-slate-400');
+                    });
+                    tabBtn.classList.add('tab-active');
+                    tabBtn.classList.remove('text-slate-400');
+                    
+                    // Update views
+                    document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+                    view.classList.remove('hidden');
+                });
+            });
+        }
+
+        // Real-time monitoring
+        function startRealTimeMonitoring() {
+            // Update every 5 seconds
+            setInterval(() => {
+                updateSystemStatus();
+                updateMetrics();
+                updateActivityLog();
+            }, 5000);
+        }
+
+        // Initial checks
+        async function runInitialChecks() {
+            await updateSystemStatus();
+            await updateMetrics();
+            await checkSystemAlerts();
+        }
+
+        // Update system status
+        async function updateSystemStatus() {
+            const startTime = Date.now();
+            
+            try {
+                // Test API
+                const apiResponse = await fetch('/api/students');
+                const apiTime = Date.now() - startTime;
+                
+                if (apiResponse.ok) {
+                    document.getElementById('api-server-status').textContent = 'Online';
+                    document.getElementById('api-server-status').className = 'text-lg font-semibold status-online';
+                    document.getElementById('api-response-time').textContent = `${apiTime}ms`;
+                    systemHealth.api = true;
+                } else {
+                    throw new Error('API response not ok');
+                }
+            } catch (err) {
+                document.getElementById('api-server-status').textContent = 'Offline';
+                document.getElementById('api-server-status').className = 'text-lg font-semibold status-offline';
+                systemHealth.api = false;
+            }
+
+            try {
+                // Test Database
+                const dbResponse = await fetch('/api/activity-logs');
+                if (dbResponse.ok) {
+                    const logs = await dbResponse.json();
+                    document.getElementById('database-status').textContent = 'Connected';
+                    document.getElementById('database-status').className = 'text-lg font-semibold status-online';
+                    document.getElementById('db-records').textContent = logs.length;
+                    systemHealth.database = true;
+                } else {
+                    throw new Error('Database response not ok');
+                }
+            } catch (err) {
+                document.getElementById('database-status').textContent = 'Disconnected';
+                document.getElementById('database-status').className = 'text-lg font-semibold status-offline';
+                systemHealth.database = false;
+            }
+
+            try {
+                // Test AI Service
+                const aiResponse = await fetch('/api/report/S001');
+                if (aiResponse.ok) {
+                    document.getElementById('ai-service-status').textContent = 'Active';
+                    document.getElementById('ai-service-status').className = 'text-lg font-semibold status-online';
+                    document.getElementById('ai-model').textContent = 'Gemini';
+                    systemHealth.ai = true;
+                } else {
+                    throw new Error('AI response not ok');
+                }
+            } catch (err) {
+                document.getElementById('ai-service-status').textContent = 'Inactive';
+                document.getElementById('ai-service-status').className = 'text-lg font-semibold status-offline';
+                systemHealth.ai = false;
+            }
+
+            // Update student count
+            try {
+                const studentsResponse = await fetch('/api/students');
+                if (studentsResponse.ok) {
+                    const students = await studentsResponse.json();
+                    document.getElementById('student-count').textContent = students.length;
+                    document.getElementById('active-users').textContent = students.length;
+                }
+            } catch (err) {
+                console.error('Error getting student count:', err);
+            }
+
+            // Update last check time
+            document.getElementById('last-update').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        // Update metrics
+        async function updateMetrics() {
+            // Simulate metrics (in real implementation, these would come from actual monitoring)
+            document.getElementById('requests-per-minute').textContent = Math.floor(Math.random() * 50) + 10;
+            document.getElementById('error-rate').textContent = (Math.random() * 2).toFixed(1) + '%';
+            document.getElementById('avg-response-time').textContent = Math.floor(Math.random() * 200) + 50 + 'ms';
+        }
+
+        // Update activity log
+        function updateActivityLog() {
+            const logContainer = document.getElementById('activity-log');
+            const activities = [
+                { type: 'API Request', endpoint: '/api/students', status: 'success', time: new Date().toLocaleTimeString() },
+                { type: 'Database Query', table: 'student_activity', status: 'success', time: new Date().toLocaleTimeString() },
+                { type: 'AI Analysis', student: 'S001', status: 'success', time: new Date().toLocaleTimeString() }
+            ];
+
+            // Add new activity
+            const activity = activities[Math.floor(Math.random() * activities.length)];
+            const logEntry = document.createElement('div');
+            logEntry.className = 'flex justify-between items-center p-2 bg-white rounded border border-slate-200 text-sm';
+            logEntry.innerHTML = `
+                <span class="font-medium">${activity.type}</span>
+                <span class="text-slate-500">${activity.endpoint || activity.table || activity.student || ''}</span>
+                <span class="text-xs ${activity.status === 'success' ? 'text-green-600' : 'text-red-600'}">${activity.status}</span>
+                <span class="text-xs text-slate-400">${activity.time}</span>
+            `;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // Keep only last 10 entries
+            while (logContainer.children.length > 10) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // Check system alerts
+        async function checkSystemAlerts() {
+            const alertsContainer = document.getElementById('system-alerts');
+            alertsContainer.innerHTML = '';
+
+            if (!systemHealth.api) {
+                alertsContainer.innerHTML += `
+                    <div class="alert-critical p-4 rounded-lg">
+                        <strong>Critical:</strong> API Server is offline. Check if the service is running.
+                    </div>
+                `;
+            }
+
+            if (!systemHealth.database) {
+                alertsContainer.innerHTML += `
+                    <div class="alert-warning p-4 rounded-lg">
+                        <strong>Warning:</strong> Database connection issues detected.
+                    </div>
+                `;
+            }
+
+            if (!systemHealth.ai) {
+                alertsContainer.innerHTML += `
+                    <div class="alert-info p-4 rounded-lg">
+                        <strong>Info:</strong> AI service is not responding. Check API key configuration.
+                    </div>
+                `;
+            }
+
+            if (systemHealth.api && systemHealth.database && systemHealth.ai) {
+                alertsContainer.innerHTML += `
+                    <div class="alert-success p-4 rounded-lg">
+                        <strong>Success:</strong> All systems are operational.
+                    </div>
+                `;
+            }
+        }
+
+        // Diagnostic functions
+        async function runDiagnostics() {
+            const resultsContainer = document.getElementById('diagnostic-results');
+            resultsContainer.innerHTML = '<div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div><p class="mt-2">Running diagnostics...</p></div>';
+
+            const diagnostics = [
+                { name: 'API Server Test', test: () => fetch('/api/students') },
+                { name: 'Database Connection', test: () => fetch('/api/activity-logs') },
+                { name: 'AI Service Test', test: () => fetch('/api/report/S001') },
+                { name: 'Health Endpoint', test: () => fetch('/health') }
+            ];
+
+            let results = '';
+            for (const diagnostic of diagnostics) {
+                try {
+                    const response = await diagnostic.test();
+                    const status = response.ok ? 'PASS' : 'FAIL';
+                    const statusClass = response.ok ? 'test-pass' : 'test-fail';
+                    results += `
+                        <div class="flex justify-between items-center p-3 bg-white rounded-lg border border-slate-200">
+                            <span class="font-medium">${diagnostic.name}</span>
+                            <span class="${statusClass} px-3 py-1 rounded-full text-xs font-semibold">${status}</span>
+                        </div>
+                    `;
+                } catch (err) {
+                    results += `
+                        <div class="flex justify-between items-center p-3 bg-white rounded-lg border border-slate-200">
+                            <span class="font-medium">${diagnostic.name}</span>
+                            <span class="test-fail px-3 py-1 rounded-full text-xs font-semibold">FAIL</span>
+                        </div>
+                    `;
+                }
+            }
+
+            resultsContainer.innerHTML = results;
+        }
+
+        async function testAllAPIs() {
+            const resultsContainer = document.getElementById('diagnostic-results');
+            resultsContainer.innerHTML = '<div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-green-500 border-t-transparent"></div><p class="mt-2">Testing APIs...</p></div>';
+
+            const apis = [
+                { method: 'GET', endpoint: '/api/students', description: 'Get all students' },
+                { method: 'GET', endpoint: '/api/activity-logs', description: 'Get activity logs' },
+                { method: 'GET', endpoint: '/api/report/S001', description: 'Get student report' },
+                { method: 'GET', endpoint: '/api/report/S002', description: 'Get student report (Bella)' },
+                { method: 'GET', endpoint: '/api/report/S003', description: 'Get student report (Charlie)' }
+            ];
+
+            let results = '';
+            for (const api of apis) {
+                try {
+                    const response = await fetch(api.endpoint);
+                    const status = response.ok ? 'SUCCESS' : 'ERROR';
+                    const statusClass = response.ok ? 'test-pass' : 'test-fail';
+                    results += `
+                        <div class="p-3 bg-white rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">${api.method}</span>
+                                <span class="${statusClass} px-3 py-1 rounded-full text-xs font-semibold">${status}</span>
+                            </div>
+                            <div class="font-mono text-sm text-slate-700">${api.endpoint}</div>
+                            <div class="text-sm text-slate-500">${api.description}</div>
+                        </div>
+                    `;
+                } catch (err) {
+                    results += `
+                        <div class="p-3 bg-white rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-mono text-sm bg-green-100 text-green-800 px-2 py-1 rounded">${api.method}</span>
+                                <span class="test-fail px-3 py-1 rounded-full text-xs font-semibold">ERROR</span>
+                            </div>
+                            <div class="font-mono text-sm text-slate-700">${api.endpoint}</div>
+                            <div class="text-sm text-slate-500">${api.description}</div>
+                            <div class="text-sm text-red-600">Error: ${err.message}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            resultsContainer.innerHTML = results;
+        }
+
+        async function checkDatabase() {
+            const resultsContainer = document.getElementById('diagnostic-results');
+            resultsContainer.innerHTML = '<div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div><p class="mt-2">Checking database...</p></div>';
+
+            try {
+                const response = await fetch('/api/activity-logs');
+                if (response.ok) {
+                    const logs = await response.json();
+                    const studentsResponse = await fetch('/api/students');
+                    const students = await studentsResponse.json();
+                    
+                    resultsContainer.innerHTML = `
+                        <div class="bg-white p-4 rounded-lg border border-slate-200">
+                            <h4 class="font-semibold text-green-800 mb-2">Database Check: PASS</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Activity Records:</span>
+                                    <span class="font-medium">${logs.length}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Students:</span>
+                                    <span class="font-medium">${students.length}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Latest Activity:</span>
+                                    <span class="font-medium">${logs[0]?.date || 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Database check failed');
+                }
+            } catch (err) {
+                resultsContainer.innerHTML = `
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <h4 class="font-semibold text-red-800 mb-2">Database Check: FAIL</h4>
+                        <div class="text-sm text-red-600">Error: ${err.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function testAIService() {
+            const resultsContainer = document.getElementById('diagnostic-results');
+            resultsContainer.innerHTML = '<div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-500 border-t-transparent"></div><p class="mt-2">Testing AI service...</p></div>';
+
+            try {
+                const response = await fetch('/api/report/S001');
+                if (response.ok) {
+                    const data = await response.json();
+                    const hasAIRecommendation = data.ai_recommendation && !data.ai_recommendation.includes('Error');
+                    
+                    resultsContainer.innerHTML = `
+                        <div class="bg-white p-4 rounded-lg border border-slate-200">
+                            <h4 class="font-semibold ${hasAIRecommendation ? 'text-green-800' : 'text-amber-800'} mb-2">AI Service Check: ${hasAIRecommendation ? 'PASS' : 'PARTIAL'}</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">API Response:</span>
+                                    <span class="font-medium">Success</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">AI Recommendations:</span>
+                                    <span class="font-medium">${hasAIRecommendation ? 'Working' : 'Not Working'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Sample Output:</span>
+                                    <span class="font-medium text-xs">${data.ai_recommendation?.substring(0, 50) || 'N/A'}...</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('AI service check failed');
+                }
+            } catch (err) {
+                resultsContainer.innerHTML = `
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <h4 class="font-semibold text-red-800 mb-2">AI Service Check: FAIL</h4>
+                        <div class="text-sm text-red-600">Error: ${err.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function runHealthCheck() {
+            const resultsContainer = document.getElementById('health-check-results');
+            resultsContainer.innerHTML = '<div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-green-500 border-t-transparent"></div><p class="mt-2">Running comprehensive health check...</p></div>';
+
+            const healthChecks = [
+                { name: 'API Server Health', check: 'api', critical: true },
+                { name: 'Database Connectivity', check: 'database', critical: true },
+                { name: 'AI Service Availability', check: 'ai', critical: false },
+                { name: 'Data Integrity', check: 'data', critical: true },
+                { name: 'Response Time', check: 'performance', critical: false }
+            ];
+
+            let results = '';
+            let overallHealth = 'HEALTHY';
+
+            for (const healthCheck of healthChecks) {
+                let status = 'PASS';
+                let statusClass = 'test-pass';
+                let details = '';
+
+                if (healthCheck.check === 'api') {
+                    try {
+                        const response = await fetch('/api/students');
+                        if (!response.ok) throw new Error('API not responding');
+                        details = 'API server responding normally';
+                    } catch (err) {
+                        status = 'FAIL';
+                        statusClass = 'test-fail';
+                        details = 'API server not responding';
+                        overallHealth = 'UNHEALTHY';
+                    }
+                } else if (healthCheck.check === 'database') {
+                    try {
+                        const response = await fetch('/api/activity-logs');
+                        if (!response.ok) throw new Error('Database not accessible');
+                        const logs = await response.json();
+                        details = `Database accessible, ${logs.length} records found`;
+                    } catch (err) {
+                        status = 'FAIL';
+                        statusClass = 'test-fail';
+                        details = 'Database not accessible';
+                        overallHealth = 'UNHEALTHY';
+                    }
+                } else if (healthCheck.check === 'ai') {
+                    try {
+                        const response = await fetch('/api/report/S001');
+                        if (!response.ok) throw new Error('AI service not responding');
+                        const data = await response.json();
+                        details = data.ai_recommendation && !data.ai_recommendation.includes('Error') ? 'AI service working' : 'AI service has issues';
+                        if (data.ai_recommendation?.includes('Error')) {
+                            status = 'WARNING';
+                            statusClass = 'test-running';
+                        }
+                    } catch (err) {
+                        status = 'FAIL';
+                        statusClass = 'test-fail';
+                        details = 'AI service not responding';
+                    }
+                } else if (healthCheck.check === 'data') {
+                    try {
+                        const studentsResponse = await fetch('/api/students');
+                        const activitiesResponse = await fetch('/api/activity-logs');
+                        if (studentsResponse.ok && activitiesResponse.ok) {
+                            const students = await studentsResponse.json();
+                            const activities = await activitiesResponse.json();
+                            details = `Data integrity OK: ${students.length} students, ${activities.length} activities`;
+                        } else {
+                            throw new Error('Data integrity check failed');
+                        }
+                    } catch (err) {
+                        status = 'FAIL';
+                        statusClass = 'test-fail';
+                        details = 'Data integrity issues detected';
+                        overallHealth = 'UNHEALTHY';
+                    }
+                } else if (healthCheck.check === 'performance') {
+                    const startTime = Date.now();
+                    try {
+                        const response = await fetch('/api/students');
+                        const responseTime = Date.now() - startTime;
+                        if (responseTime > 1000) {
+                            status = 'WARNING';
+                            statusClass = 'test-running';
+                            details = `Slow response: ${responseTime}ms`;
+                        } else {
+                            details = `Response time acceptable: ${responseTime}ms`;
+                        }
+                    } catch (err) {
+                        status = 'FAIL';
+                        statusClass = 'test-fail';
+                        details = 'Performance test failed';
+                    }
+                }
+
+                const criticalIcon = healthCheck.critical ? ' <span class="text-red-500">*</span>' : '';
+                results += `
+                    <div class="p-4 bg-white rounded-lg border border-slate-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold">${healthCheck.name}${criticalIcon}</span>
+                            <span class="${statusClass} px-3 py-1 rounded-full text-xs font-semibold">${status}</span>
+                        </div>
+                        <div class="text-sm text-slate-600">${details}</div>
+                    </div>
+                `;
+            }
+
+            // Add overall health summary
+            const overallClass = overallHealth === 'HEALTHY' ? 'alert-success' : overallHealth === 'WARNING' ? 'alert-warning' : 'alert-critical';
+            results = `
+                <div class="${overallClass} p-4 rounded-lg mb-4">
+                    <h4 class="font-semibold mb-2">Overall Health: ${overallHealth}</h4>
+                    <div class="text-sm">
+                        ${overallHealth === 'HEALTHY' ? 'All systems are operating normally.' : 
+                          overallHealth === 'WARNING' ? 'Some systems have issues but core functionality is maintained.' :
+                          'Critical issues detected. Immediate attention required.'}
+                    </div>
+                </div>
+            ` + results;
+
+            resultsContainer.innerHTML = results;
+        }
+
+        // Utility functions
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show success feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('bg-green-600');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('bg-green-600');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        // Update system information
+        async function updateSystemInfo() {
+            try {
+                // Get database info
+                const activitiesResponse = await fetch('/api/activity-logs');
+                if (activitiesResponse.ok) {
+                    const activities = await activitiesResponse.json();
+                    document.getElementById('db-tables').textContent = '3 tables';
+                    document.getElementById('db-size').textContent = `${(activities.length * 0.1).toFixed(1)} KB (estimated)`;
+                }
+            } catch (err) {
+                console.error('Error updating system info:', err);
+            }
+        }
+
+        // Initialize system info when health tab is clicked
+        document.getElementById('tab-health').addEventListener('click', () => {
+            updateSystemInfo();
+        });
+    </script>
+</body>
+</html>

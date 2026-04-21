@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  student-behavior-analytics:
+    build: .
+    container_name: student-behavior-analytics
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=sqlite:///behavior.db
+      - LOG_LEVEL=INFO
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - RATE_LIMIT_WINDOW_SECONDS=60
+    volumes:
+      - ./behavior.db:/app/behavior.db
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - analytics-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: analytics-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - student-behavior-analytics
+    restart: unless-stopped
+    networks:
+      - analytics-network
+
+networks:
+  analytics-network:
+    driver: bridge
+
+volumes:
+  logs:
+    driver: local
