@@ -8,6 +8,121 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from analyzer import analyze_student
 from llm_service import generate_parent_report
+from groq import Groq
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+# ============================================
+# LLM-POWERED REPORT GENERATION
+# ============================================
+
+def generate_llm_agent_report(agent_type: str, analysis_data: Dict[str, Any]) -> str:
+    """
+    Generate natural language report using LLM based on agent analysis
+    
+    Args:
+        agent_type: Type of agent (behavior, learning_path, intervention)
+        analysis_data: Analysis data from the agent
+    
+    Returns:
+        Natural language report from LLM
+    """
+    try:
+        if GROQ_API_KEY and GROQ_API_KEY != "your_groq_api_key_here":
+            client = Groq(api_key=GROQ_API_KEY)
+            
+            # Build prompt based on agent type
+            if agent_type == "behavior":
+                prompt = f"""
+                You are an educational behavior analyst. Write a comprehensive behavioral analysis report based on this data:
+                
+                Student ID: {analysis_data.get('student_id', 'Unknown')}
+                Total Study Time: {analysis_data.get('total_study_time', 0)} minutes
+                Average Distraction: {analysis_data.get('avg_distraction', 0)}/10
+                Average Marks: {analysis_data.get('avg_marks', 0)}%
+                Behavioral Tag: {analysis_data.get('behavioral_tag', 'Unknown')}
+                Marks Trend: {analysis_data.get('marks_trend', 0)}%
+                Recent Activities: {analysis_data.get('recent_activities_count', 0)} sessions
+                
+                Write a 4-5 sentence analysis that explains:
+                1. What the behavioral patterns indicate
+                2. Key risk factors or strengths
+                3. Specific observations from the data
+                4. What this means for the student's progress
+                5. Recommendations for next steps
+                
+                Be specific, professional, and actionable.
+                """
+            elif agent_type == "learning_path":
+                level = analysis_data.get('level', 'Unknown')
+                duration = analysis_data.get('duration', 'Unknown')
+                milestones = analysis_data.get('milestones', [])
+                
+                prompt = f"""
+                You are an educational curriculum designer. Write a comprehensive learning path report based on this data:
+                
+                Student ID: {analysis_data.get('student_id', 'Unknown')}
+                Learning Level: {level}
+                Duration: {duration}
+                Starting Point: {analysis_data.get('starting_point', {})}
+                
+                Milestones: {milestones}
+                
+                Write a 4-5 sentence learning path summary that explains:
+                1. Why this learning level was chosen
+                2. What the student will focus on
+                3. Key milestones and their importance
+                4. How resources support the learning journey
+                5. Expected outcomes and success indicators
+                
+                Be encouraging, structured, and clear about the learning journey.
+                """
+            elif agent_type == "intervention":
+                urgency = analysis_data.get('urgency', 'Unknown')
+                intervention_type = analysis_data.get('intervention_type', 'Unknown')
+                timeline = analysis_data.get('timeline', 'Unknown')
+                actions = analysis_data.get('actions', [])
+                success_metrics = analysis_data.get('success_metrics', [])
+                
+                prompt = f"""
+                You are an educational intervention specialist. Write a comprehensive intervention report based on this data:
+                
+                Student ID: {analysis_data.get('student_id', 'Unknown')}
+                Urgency: {urgency}
+                Intervention Type: {intervention_type}
+                Timeline: {timeline}
+                Current Status: {analysis_data.get('current_status', {})}
+                
+                Actions: {actions}
+                Success Metrics: {success_metrics}
+                
+                Write a 4-5 sentence intervention summary that explains:
+                1. Why this intervention is needed
+                2. The specific approach and its rationale
+                3. How the timeline ensures success
+                4. What success looks like and how it will be measured
+                5. Next steps for implementation
+                
+                Be urgent but supportive, specific, and actionable.
+                """
+            
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[
+                    {"role": "system", "content": "You are an expert educational analyst and advisor."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=300,
+                temperature=0.7
+            )
+            return response.choices[0].message.content.strip()
+        else:
+            return None
+    except Exception as e:
+        return None
 
 # ============================================
 # TOOL 1: Student Data Retrieval Tools
@@ -597,6 +712,255 @@ def get_student_summary(student_id: str) -> Dict[str, Any]:
     }
 
 # ============================================
+# TOOL 7: Export and Visualization Tools
+# ============================================
+
+def export_student_data_to_csv(student_id: str) -> Dict[str, Any]:
+    """
+    Export student activity data to CSV format
+    
+    Args:
+        student_id: Student identifier
+    
+    Returns:
+        CSV data string
+    """
+    try:
+        activities = get_student_activity_logs(student_id, days=365)
+        
+        if not activities:
+            return {"error": "No data found for student"}
+        
+        # Create CSV header
+        csv_header = "ID,Student ID,Student Name,Date,Time Spent (mins),Distraction Score,Marks Achieved (%)"
+        
+        # Create CSV rows
+        csv_rows = []
+        for activity in activities:
+            row = f"{activity['id']},{activity['student_id']},{activity['student_name']},{activity['date']},{activity['time_spent_mins']},{activity['distraction_score']},{activity['marks_achieved_percent']}"
+            csv_rows.append(row)
+        
+        csv_data = csv_header + "\n" + "\n".join(csv_rows)
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "csv_data": csv_data,
+            "row_count": len(csv_rows)
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+def export_class_data_to_csv() -> Dict[str, Any]:
+    """
+    Export all class data to CSV format
+    
+    Returns:
+        CSV data string
+    """
+    try:
+        conn = sqlite3.connect('behavior.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, student_id, student_name, date, time_spent_mins, 
+                   distraction_score, marks_achieved_percent
+            FROM student_activity
+            ORDER BY student_id, date DESC
+        """)
+        
+        activities = cursor.fetchall()
+        conn.close()
+        
+        if not activities:
+            return {"error": "No data found"}
+        
+        # Create CSV header
+        csv_header = "ID,Student ID,Student Name,Date,Time Spent (mins),Distraction Score,Marks Achieved (%)"
+        
+        # Create CSV rows
+        csv_rows = []
+        for activity in activities:
+            row = f"{activity[0]},{activity[1]},{activity[2]},{activity[3]},{activity[4]},{activity[5]},{activity[6]}"
+            csv_rows.append(row)
+        
+        csv_data = csv_header + "\n" + "\n".join(csv_rows)
+        
+        return {
+            "success": True,
+            "csv_data": csv_data,
+            "row_count": len(csv_rows)
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+def generate_student_chart_data(student_id: str, chart_type: str = "performance") -> Dict[str, Any]:
+    """
+    Generate data for student performance charts
+    
+    Args:
+        student_id: Student identifier
+        chart_type: Type of chart (performance, distraction, time)
+    
+    Returns:
+        Chart data in JSON format
+    """
+    try:
+        activities = get_student_activity_logs(student_id, days=30)
+        
+        if not activities:
+            return {"error": "No data found for student"}
+        
+        # Sort by date ascending for chart
+        activities_sorted = sorted(activities, key=lambda x: x['date'])
+        
+        if chart_type == "performance":
+            labels = [a['date'] for a in activities_sorted]
+            data = [a['marks_achieved_percent'] for a in activities_sorted]
+            chart_title = "Performance Over Time"
+            y_axis_label = "Marks Achieved (%)"
+        elif chart_type == "distraction":
+            labels = [a['date'] for a in activities_sorted]
+            data = [a['distraction_score'] for a in activities_sorted]
+            chart_title = "Distraction Score Over Time"
+            y_axis_label = "Distraction Score (0-10)"
+        elif chart_type == "time":
+            labels = [a['date'] for a in activities_sorted]
+            data = [a['time_spent_mins'] for a in activities_sorted]
+            chart_title = "Study Time Over Time"
+            y_axis_label = "Time Spent (minutes)"
+        else:
+            return {"error": "Invalid chart type"}
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "chart_type": chart_type,
+            "chart_title": chart_title,
+            "labels": labels,
+            "data": data,
+            "y_axis_label": y_axis_label
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+def generate_class_chart_data(chart_type: str = "comparison") -> Dict[str, Any]:
+    """
+    Generate data for class-wide charts
+    
+    Args:
+        chart_type: Type of chart (comparison, distribution, trends)
+    
+    Returns:
+        Chart data in JSON format
+    """
+    try:
+        students = get_all_students()
+        
+        if not students:
+            return {"error": "No students found"}
+        
+        if chart_type == "comparison":
+            labels = [s['name'] for s in students]
+            marks_data = []
+            distraction_data = []
+            
+            for student in students:
+                analysis = analyze_student(student['id'])
+                if analysis:
+                    marks_data.append(analysis['avg_marks'])
+                    distraction_data.append(analysis['avg_distraction'])
+            
+            return {
+                "success": True,
+                "chart_type": "comparison",
+                "chart_title": "Student Performance Comparison",
+                "labels": labels,
+                "marks_data": marks_data,
+                "distraction_data": distraction_data
+            }
+        elif chart_type == "distribution":
+            overview = get_class_overview()
+            distribution = overview.get('behavioral_tag_distribution', {})
+            
+            labels = list(distribution.keys())
+            data = list(distribution.values())
+            
+            return {
+                "success": True,
+                "chart_type": "distribution",
+                "chart_title": "Behavioral Tag Distribution",
+                "labels": labels,
+                "data": data
+            }
+        else:
+            return {"error": "Invalid chart type"}
+    except Exception as e:
+        return {"error": str(e)}
+
+def generate_report_summary_text(student_id: str) -> Dict[str, Any]:
+    """
+    Generate comprehensive text summary for report
+    
+    Args:
+        student_id: Student identifier
+    
+    Returns:
+        Text summary
+    """
+    try:
+        analysis = analyze_student_behavior(student_id)
+        
+        if "error" in analysis:
+            return analysis
+        
+        # Generate LLM report for each agent
+        behavior_report = generate_llm_agent_report("behavior", analysis)
+        learning_path = create_learning_path(student_id)
+        learning_report = generate_llm_agent_report("learning_path", learning_path)
+        intervention = suggest_intervention(student_id)
+        intervention_report = generate_llm_agent_report("intervention", intervention)
+        
+        # Combine into comprehensive summary
+        summary = f"""
+STUDENT BEHAVIOR ANALYSIS REPORT
+================================
+Student ID: {analysis.get('student_id', 'Unknown')}
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+BEHAVIORAL ANALYSIS
+------------------
+{behavior_report or "Analysis not available"}
+
+LEARNING PATH
+-------------
+{learning_report or "Learning path not available"}
+
+INTERVENTION PLAN
+-----------------
+{intervention_report or "Intervention plan not available"}
+
+KEY METRICS
+-----------
+Total Study Time: {analysis.get('total_study_time', 0)} minutes
+Average Distraction: {analysis.get('avg_distraction', 0)}/10
+Average Marks: {analysis.get('avg_marks', 0)}%
+Behavioral Tag: {analysis.get('behavioral_tag', 'Unknown')}
+Marks Trend: {analysis.get('marks_trend', 0)}%
+"""
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "summary_text": summary,
+            "analysis": analysis,
+            "learning_path": learning_path,
+            "intervention": intervention
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+# ============================================
 # TOOL SCHEMA FOR AGENTIC AI
 # ============================================
 
@@ -688,6 +1052,46 @@ TOOL_SCHEMA = {
         {
             "name": "get_student_summary",
             "description": "Get comprehensive student summary",
+            "parameters": {
+                "student_id": {"type": "string", "required": True}
+            }
+        }
+    ],
+    "export_tools": [
+        {
+            "name": "export_student_data_to_csv",
+            "description": "Export student activity data to CSV format",
+            "parameters": {
+                "student_id": {"type": "string", "required": True}
+            }
+        },
+        {
+            "name": "export_class_data_to_csv",
+            "description": "Export all class data to CSV format",
+            "parameters": {}
+        }
+    ],
+    "visualization_tools": [
+        {
+            "name": "generate_student_chart_data",
+            "description": "Generate data for student performance charts",
+            "parameters": {
+                "student_id": {"type": "string", "required": True},
+                "chart_type": {"type": "string", "required": False, "default": "performance"}
+            }
+        },
+        {
+            "name": "generate_class_chart_data",
+            "description": "Generate data for class-wide charts",
+            "parameters": {
+                "chart_type": {"type": "string", "required": False, "default": "comparison"}
+            }
+        }
+    ],
+    "report_tools": [
+        {
+            "name": "generate_report_summary_text",
+            "description": "Generate comprehensive text summary for report",
             "parameters": {
                 "student_id": {"type": "string", "required": True}
             }

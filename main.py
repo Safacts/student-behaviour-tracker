@@ -16,7 +16,13 @@ from agents import (
     suggest_intervention,
     identify_at_risk_students,
     get_class_overview,
-    TOOL_SCHEMA
+    TOOL_SCHEMA,
+    generate_llm_agent_report,
+    export_student_data_to_csv,
+    export_class_data_to_csv,
+    generate_student_chart_data,
+    generate_class_chart_data,
+    generate_report_summary_text
 )
 
 app = FastAPI(title="Student Behavior Analysis PoC")
@@ -122,13 +128,16 @@ def list_agents():
 
 @app.get("/api/agents/behavior/{student_id}")
 def behavior_analysis_agent(student_id: str):
-    """Behavior Analysis Agent - Deep behavioral pattern analysis"""
+    """Behavior Analysis Agent - Deep behavioral pattern analysis with LLM report"""
     try:
         analysis = analyze_student_behavior(student_id)
+        llm_report = generate_llm_agent_report("behavior", analysis)
+        
         return {
             "agent": "Behavior Analysis Agent",
             "student_id": student_id,
             "analysis": analysis,
+            "llm_report": llm_report,
             "timestamp": time.time()
         }
     except Exception as e:
@@ -136,13 +145,16 @@ def behavior_analysis_agent(student_id: str):
 
 @app.get("/api/agents/learning-path/{student_id}")
 def learning_path_agent(student_id: str):
-    """Learning Path Agent - Creates personalized learning paths"""
+    """Learning Path Agent - Creates personalized learning paths with LLM report"""
     try:
         learning_path = create_learning_path(student_id)
+        llm_report = generate_llm_agent_report("learning_path", learning_path)
+        
         return {
             "agent": "Learning Path Agent",
             "student_id": student_id,
             "learning_path": learning_path,
+            "llm_report": llm_report,
             "timestamp": time.time()
         }
     except Exception as e:
@@ -150,13 +162,16 @@ def learning_path_agent(student_id: str):
 
 @app.get("/api/agents/intervention/{student_id}")
 def intervention_agent(student_id: str):
-    """Intervention Agent - Recommends targeted interventions"""
+    """Intervention Agent - Recommends targeted interventions with LLM report"""
     try:
         intervention = suggest_intervention(student_id)
+        llm_report = generate_llm_agent_report("intervention", intervention)
+        
         return {
             "agent": "Intervention Agent",
             "student_id": student_id,
             "intervention": intervention,
+            "llm_report": llm_report,
             "timestamp": time.time()
         }
     except Exception as e:
@@ -197,14 +212,66 @@ def get_agent_tools():
     """Get tool schema for agentic AI integration"""
     return TOOL_SCHEMA
 
+# Export and Visualization Endpoints
+
+@app.get("/api/export/student/{student_id}/csv")
+def export_student_csv(student_id: str):
+    """Export student data to CSV"""
+    try:
+        csv_result = export_student_data_to_csv(student_id)
+        return csv_result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CSV export failed: {str(e)}")
+
+@app.get("/api/export/class/csv")
+def export_class_csv():
+    """Export all class data to CSV"""
+    try:
+        csv_result = export_class_data_to_csv()
+        return csv_result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CSV export failed: {str(e)}")
+
+@app.get("/api/charts/student/{student_id}")
+def get_student_chart(student_id: str, chart_type: str = "performance"):
+    """Get student chart data"""
+    try:
+        chart_data = generate_student_chart_data(student_id, chart_type)
+        return chart_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chart generation failed: {str(e)}")
+
+@app.get("/api/charts/class")
+def get_class_chart(chart_type: str = "comparison"):
+    """Get class chart data"""
+    try:
+        chart_data = generate_class_chart_data(chart_type)
+        return chart_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chart generation failed: {str(e)}")
+
+@app.get("/api/report/summary/{student_id}")
+def get_report_summary(student_id: str):
+    """Get comprehensive text report summary"""
+    try:
+        summary = generate_report_summary_text(student_id)
+        return summary
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
 @app.get("/api/agents/comprehensive/{student_id}")
 def comprehensive_agent(student_id: str):
-    """Comprehensive Agent - Runs all agents and combines results"""
+    """Comprehensive Agent - Runs all agents with LLM reports and combines results"""
     try:
         # Get analysis from all agents
         behavior_analysis = analyze_student_behavior(student_id)
         learning_path = create_learning_path(student_id)
         intervention = suggest_intervention(student_id)
+        
+        # Generate LLM reports for each agent
+        behavior_llm_report = generate_llm_agent_report("behavior", behavior_analysis)
+        learning_llm_report = generate_llm_agent_report("learning_path", learning_path)
+        intervention_llm_report = generate_llm_agent_report("intervention", intervention)
         
         # Generate summary
         behavioral_tag = behavior_analysis.get("behavioral_tag", "Unknown")
@@ -248,6 +315,11 @@ def comprehensive_agent(student_id: str):
                 "behavior_analysis": behavior_analysis,
                 "learning_path": learning_path,
                 "intervention_plan": intervention
+            },
+            "llm_reports": {
+                "behavior_analysis_report": behavior_llm_report,
+                "learning_path_report": learning_llm_report,
+                "intervention_report": intervention_llm_report
             },
             "summary": {
                 "overall_risk_level": overall_risk,
