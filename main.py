@@ -10,6 +10,14 @@ from typing import Dict, Any
 
 from analyzer import analyze_student
 from llm_service import generate_parent_report
+from agents import (
+    analyze_student_behavior,
+    create_learning_path,
+    suggest_intervention,
+    identify_at_risk_students,
+    get_class_overview,
+    TOOL_SCHEMA
+)
 
 app = FastAPI(title="Student Behavior Analysis PoC")
 
@@ -84,7 +92,7 @@ def get_report(student_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
 
-# Simple working endpoints - agent endpoints temporarily removed
+# Agent endpoints - now fully functional
 
 @app.get("/api/agents")
 def list_agents():
@@ -111,6 +119,83 @@ def list_agents():
             }
         ]
     }
+
+@app.get("/api/agents/behavior/{student_id}")
+def behavior_analysis_agent(student_id: str):
+    """Behavior Analysis Agent - Deep behavioral pattern analysis"""
+    try:
+        analysis = analyze_student_behavior(student_id)
+        return {
+            "agent": "Behavior Analysis Agent",
+            "student_id": student_id,
+            "analysis": analysis,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Behavior analysis failed: {str(e)}")
+
+@app.get("/api/agents/learning-path/{student_id}")
+def learning_path_agent(student_id: str):
+    """Learning Path Agent - Creates personalized learning paths"""
+    try:
+        learning_path = create_learning_path(student_id)
+        return {
+            "agent": "Learning Path Agent",
+            "student_id": student_id,
+            "learning_path": learning_path,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Learning path creation failed: {str(e)}")
+
+@app.get("/api/agents/intervention/{student_id}")
+def intervention_agent(student_id: str):
+    """Intervention Agent - Recommends targeted interventions"""
+    try:
+        intervention = suggest_intervention(student_id)
+        return {
+            "agent": "Intervention Agent",
+            "student_id": student_id,
+            "intervention": intervention,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Intervention suggestion failed: {str(e)}")
+
+@app.get("/api/agents/class-overview")
+def class_overview_agent():
+    """Class Overview Agent - Provides class-wide analysis"""
+    try:
+        overview = get_class_overview()
+        return {
+            "agent": "Class Overview Agent",
+            "overview": overview,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Class overview failed: {str(e)}")
+
+@app.get("/api/agents/at-risk")
+def at_risk_agent(threshold_marks: float = 50.0, threshold_distraction: float = 6.0):
+    """At-Risk Students Agent - Identifies students needing intervention"""
+    try:
+        at_risk = identify_at_risk_students(threshold_marks, threshold_distraction)
+        return {
+            "agent": "At-Risk Students Agent",
+            "thresholds": {
+                "marks": threshold_marks,
+                "distraction": threshold_distraction
+            },
+            "at_risk_students": at_risk,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"At-risk identification failed: {str(e)}")
+
+@app.get("/api/agents/tools")
+def get_agent_tools():
+    """Get tool schema for agentic AI integration"""
+    return TOOL_SCHEMA
 
 # Serve the index.html
 @app.get("/")
