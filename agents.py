@@ -1927,7 +1927,338 @@ def generate_recurring_schedule(student_id: str, frequency: str = "weekly") -> D
         return {"error": str(e)}
 
 # ============================================
-# TOOL 13: IIT Prep Tools
+# TOOL 13: Topic/Chapter Analysis Tools
+# ============================================
+
+def analyze_topic_performance(student_id: str) -> Dict[str, Any]:
+    """
+    Analyze student performance by topic to identify strengths and weaknesses
+    
+    Args:
+        student_id: Student identifier
+    
+    Returns:
+        Topic-wise performance analysis with strengths and weaknesses
+    """
+    try:
+        conn = sqlite3.connect('behavior.db')
+        cursor = conn.cursor()
+        
+        # Get topic-wise performance
+        cursor.execute("""
+            SELECT subject, topic, chapter, 
+                   AVG(marks_achieved_percent) as avg_marks,
+                   AVG(distraction_score) as avg_distraction,
+                   COUNT(*) as activity_count
+            FROM student_activity
+            WHERE student_id = ? AND activity_type IN ('Lesson Concept', 'Practice Questions', 'Quiz')
+            GROUP BY subject, topic, chapter
+            ORDER BY subject, topic, chapter
+        """, (student_id,))
+        
+        results = cursor.fetchall()
+        conn.close()
+        
+        if not results:
+            return {"error": "No topic data found for student"}
+        
+        # Organize by subject
+        subject_analysis = {}
+        for row in results:
+            subject, topic, chapter, avg_marks, avg_distraction, count = row
+            if subject not in subject_analysis:
+                subject_analysis[subject] = []
+            
+            subject_analysis[subject].append({
+                "topic": topic,
+                "chapter": chapter,
+                "avg_marks": round(avg_marks, 2),
+                "avg_distraction": round(avg_distraction, 2),
+                "activity_count": count,
+                "strength": avg_marks >= 75,
+                "weakness": avg_marks < 50
+            })
+        
+        # Identify overall strengths and weaknesses
+        strengths = []
+        weaknesses = []
+        
+        for subject, topics in subject_analysis.items():
+            subject_avg = sum(t['avg_marks'] for t in topics) / len(topics)
+            if subject_avg >= 75:
+                strengths.append({
+                    "subject": subject,
+                    "avg_marks": round(subject_avg, 2),
+                    "strong_topics": [t['topic'] for t in topics if t['strength']]
+                })
+            elif subject_avg < 50:
+                weaknesses.append({
+                    "subject": subject,
+                    "avg_marks": round(subject_avg, 2),
+                    "weak_topics": [t['topic'] for t in topics if t['weakness']]
+                })
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "subject_analysis": subject_analysis,
+            "strengths": strengths,
+            "weaknesses": weaknesses,
+            "total_topics_analyzed": len(results)
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+def analyze_chapter_performance(student_id: str) -> Dict[str, Any]:
+    """
+    Analyze student performance by chapter with detailed metrics
+    
+    Args:
+        student_id: Student identifier
+    
+    Returns:
+        Chapter-wise performance with recommendations
+    """
+    try:
+        conn = sqlite3.connect('behavior.db')
+        cursor = conn.cursor()
+        
+        # Get chapter-wise performance
+        cursor.execute("""
+            SELECT subject, chapter,
+                   AVG(marks_achieved_percent) as avg_marks,
+                   AVG(distraction_score) as avg_distraction,
+                   AVG(time_spent_mins) as avg_time,
+                   COUNT(*) as activity_count,
+                   MIN(marks_achieved_percent) as min_marks,
+                   MAX(marks_achieved_percent) as max_marks
+            FROM student_activity
+            WHERE student_id = ? AND activity_type IN ('Lesson Concept', 'Practice Questions', 'Quiz')
+            GROUP BY subject, chapter
+            ORDER BY subject, avg_marks DESC
+        """, (student_id,))
+        
+        results = cursor.fetchall()
+        conn.close()
+        
+        if not results:
+            return {"error": "No chapter data found for student"}
+        
+        chapter_analysis = []
+        
+        for row in results:
+            subject, chapter, avg_marks, avg_distraction, avg_time, count, min_marks, max_marks = row
+            
+            # Determine status
+            if avg_marks >= 75:
+                status = "Strong"
+                focus = "Maintain performance"
+            elif avg_marks >= 50:
+                status = "Moderate"
+                focus = "Need improvement"
+            else:
+                status = "Weak"
+                focus = "Critical attention needed"
+            
+            # Generate recommendation
+            if avg_marks < 50:
+                recommendation = f"Focus on {chapter} - requires immediate attention and additional practice"
+            elif avg_marks < 75:
+                recommendation = f"Continue practicing {chapter} - aim for consistency"
+            else:
+                recommendation = f"{chapter} is strong - consider advanced problems"
+            
+            chapter_analysis.append({
+                "subject": subject,
+                "chapter": chapter,
+                "avg_marks": round(avg_marks, 2),
+                "avg_distraction": round(avg_distraction, 2),
+                "avg_time_spent": round(avg_time, 2),
+                "activity_count": count,
+                "min_marks": round(min_marks, 2),
+                "max_marks": round(max_marks, 2),
+                "status": status,
+                "focus_area": focus,
+                "recommendation": recommendation
+            })
+        
+        # Generate summary for teachers
+        weak_subjects = set(c['subject'] for c in chapter_analysis if c['status'] == 'Weak')
+        teacher_summary = {
+            "chapters_needing_attention": len([c for c in chapter_analysis if c['status'] == 'Weak']),
+            "chapters_to_maintain": len([c for c in chapter_analysis if c['status'] == 'Strong']),
+            "overall_performance": round(sum(c['avg_marks'] for c in chapter_analysis) / len(chapter_analysis), 2),
+            "priority_subjects": list(weak_subjects)
+        }
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "chapter_analysis": chapter_analysis,
+            "teacher_summary": teacher_summary,
+            "total_chapters_analyzed": len(chapter_analysis)
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+# ============================================
+# TOOL 14: Teacher Responsibility Tools
+# ============================================
+
+def assign_teacher_to_student(student_id: str, teacher_id: str, subject: str) -> Dict[str, Any]:
+    """
+    Assign a teacher to a student for a specific subject
+    
+    Args:
+        student_id: Student identifier
+        teacher_id: Teacher identifier
+        subject: Subject the teacher is responsible for
+    
+    Returns:
+        Assignment details
+    """
+    try:
+        # In-memory storage for teacher assignments
+        if not hasattr(assign_teacher_to_student, 'assignments'):
+            assign_teacher_to_student.assignments = {}
+        
+        key = f"{student_id}_{subject}"
+        assign_teacher_to_student.assignments[key] = {
+            "teacher_id": teacher_id,
+            "assigned_date": datetime.now().strftime("%Y-%m-%d"),
+            "subject": subject
+        }
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "teacher_id": teacher_id,
+            "subject": subject,
+            "assignment_date": assign_teacher_to_student.assignments[key]["assigned_date"],
+            "message": f"Teacher {teacher_id} assigned to student {student_id} for {subject}"
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+def get_teacher_responsibilities(teacher_id: str) -> Dict[str, Any]:
+    """
+    Get all students a teacher is responsible for
+    
+    Args:
+        teacher_id: Teacher identifier
+    
+    Returns:
+        List of students and subjects the teacher is responsible for
+    """
+    try:
+        if not hasattr(assign_teacher_to_student, 'assignments'):
+            assign_teacher_to_student.assignments = {}
+        
+        responsibilities = []
+        for key, assignment in assign_teacher_to_student.assignments.items():
+            if assignment['teacher_id'] == teacher_id:
+                student_id, subject = key.split('_', 1)
+                responsibilities.append({
+                    "student_id": student_id,
+                    "subject": subject,
+                    "assigned_date": assignment['assigned_date']
+                })
+        
+        # Group by student
+        student_summary = {}
+        for resp in responsibilities:
+            student_id = resp['student_id']
+            if student_id not in student_summary:
+                student_summary[student_id] = {
+                    "student_id": student_id,
+                    "subjects": [],
+                    "total_students": 0
+                }
+            student_summary[student_id]['subjects'].append(resp['subject'])
+        
+        return {
+            "success": True,
+            "teacher_id": teacher_id,
+            "total_responsibilities": len(responsibilities),
+            "student_summary": list(student_summary.values()),
+            "assignments": responsibilities
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+def generate_teacher_report(teacher_id: str) -> Dict[str, Any]:
+    """
+    Generate comprehensive teacher responsibility report
+    
+    Args:
+        teacher_id: Teacher identifier
+    
+    Returns:
+        Teacher report with student performance metrics
+    """
+    try:
+        responsibilities = get_teacher_responsibilities(teacher_id)
+        
+        if "error" in responsibilities:
+            return responsibilities
+        
+        student_data = []
+        
+        for student_info in responsibilities.get('student_summary', []):
+            student_id = student_info['student_id']
+            
+            # Get student performance for each subject
+            subject_performance = {}
+            for subject in student_info['subjects']:
+                analysis = analyze_chapter_performance(student_id)
+                
+                if "error" not in analysis:
+                    # Filter by subject
+                    subject_chapters = [c for c in analysis['chapter_analysis'] if c['subject'] == subject]
+                    if subject_chapters:
+                        subject_avg = sum(c['avg_marks'] for c in subject_chapters) / len(subject_chapters)
+                        subject_performance[subject] = {
+                            "avg_marks": round(subject_avg, 2),
+                            "chapters_analyzed": len(subject_chapters),
+                            "weak_chapters": len([c for c in subject_chapters if c['status'] == 'Weak']),
+                            "strong_chapters": len([c for c in subject_chapters if c['status'] == 'Strong'])
+                        }
+            
+            student_data.append({
+                "student_id": student_id,
+                "subjects": student_info['subjects'],
+                "subject_performance": subject_performance
+            })
+        
+        # Calculate overall metrics
+        total_students = len(student_data)
+        total_weak_chapters = sum(
+            len([c for c in s['subject_performance'].values() if c.get('weak_chapters', 0) > 0])
+            for s in student_data
+        )
+        
+        return {
+            "success": True,
+            "teacher_id": teacher_id,
+            "report_date": datetime.now().strftime("%Y-%m-%d"),
+            "summary": {
+                "total_students": total_students,
+                "total_subjects_responsible": len(responsibilities.get('assignments', [])),
+                "students_needing_attention": len([s for s in student_data if any(p.get('weak_chapters', 0) > 0 for p in s['subject_performance'].values())]),
+                "total_weak_chapters": total_weak_chapters
+            },
+            "student_details": student_data,
+            "recommendations": [
+                f"Focus on {total_weak_chapters} weak chapters across {total_students} students",
+                "Schedule regular check-ins for students with weak performance",
+                "Provide additional resources for struggling topics"
+            ]
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+# ============================================
+# TOOL 15: IIT Prep Tools
 # ============================================
 
 def generate_iit_prep_report(student_id: str) -> Dict[str, Any]:
@@ -2562,6 +2893,47 @@ TOOL_SCHEMA = {
             "description": "Generate IIT preparation-specific report",
             "parameters": {
                 "student_id": {"type": "string", "required": True}
+            }
+        }
+    ],
+    "topic_analysis_tools": [
+        {
+            "name": "analyze_topic_performance",
+            "description": "Analyze student performance by topic to identify strengths and weaknesses",
+            "parameters": {
+                "student_id": {"type": "string", "required": True}
+            }
+        },
+        {
+            "name": "analyze_chapter_performance",
+            "description": "Analyze student performance by chapter with detailed metrics and recommendations",
+            "parameters": {
+                "student_id": {"type": "string", "required": True}
+            }
+        }
+    ],
+    "teacher_responsibility_tools": [
+        {
+            "name": "assign_teacher_to_student",
+            "description": "Assign a teacher to a student for a specific subject",
+            "parameters": {
+                "student_id": {"type": "string", "required": True},
+                "teacher_id": {"type": "string", "required": True},
+                "subject": {"type": "string", "required": True}
+            }
+        },
+        {
+            "name": "get_teacher_responsibilities",
+            "description": "Get all students a teacher is responsible for",
+            "parameters": {
+                "teacher_id": {"type": "string", "required": True}
+            }
+        },
+        {
+            "name": "generate_teacher_report",
+            "description": "Generate comprehensive teacher responsibility report with student performance metrics",
+            "parameters": {
+                "teacher_id": {"type": "string", "required": True}
             }
         }
     ]

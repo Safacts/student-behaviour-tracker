@@ -1,8 +1,12 @@
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import sqlite3
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 import uvicorn
 import time
 import traceback
@@ -39,7 +43,12 @@ from agents import (
     clean_student_data,
     generate_calendar_event,
     generate_recurring_schedule,
-    generate_iit_prep_report
+    generate_iit_prep_report,
+    analyze_topic_performance,
+    analyze_chapter_performance,
+    assign_teacher_to_student,
+    get_teacher_responsibilities,
+    generate_teacher_report
 )
 
 app = FastAPI(title="Student Behavior Analysis PoC")
@@ -442,6 +451,101 @@ def get_iit_prep_report(student_id: str):
         return report
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"IIT prep report generation failed: {str(e)}")
+
+# Topic/Chapter Analysis Endpoints
+
+@app.get("/api/analysis/topic/{student_id}")
+def get_topic_analysis(student_id: str):
+    """Analyze student performance by topic"""
+    try:
+        analysis = analyze_topic_performance(student_id)
+        return analysis
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Topic analysis failed: {str(e)}")
+
+@app.get("/api/analysis/chapter/{student_id}")
+def get_chapter_analysis(student_id: str):
+    """Analyze student performance by chapter"""
+    try:
+        analysis = analyze_chapter_performance(student_id)
+        return analysis
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chapter analysis failed: {str(e)}")
+
+# PDF Download Endpoints
+
+@app.get("/api/download/pdf/{student_id}")
+def download_pdf_report(student_id: str):
+    """Generate and download PDF report"""
+    try:
+        from datetime import datetime
+        import os
+        
+        # Get report content
+        report_content = generate_pdf_report_content(student_id)
+        
+        if "error" in report_content:
+            raise HTTPException(status_code=404, detail="Student not found")
+        
+        # Create PDF
+        filename = f"report_{student_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        filepath = os.path.join(os.getcwd(), filename)
+        
+        doc = SimpleDocTemplate(filepath, pagesize=letter)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Add title
+        title = Paragraph(f"Student Report - {student_id}", styles['Title'])
+        story.append(title)
+        story.append(Spacer(1, 12))
+        
+        # Add content sections
+        for section_name, section_data in report_content.get('pdf_content', {}).items():
+            if isinstance(section_data, dict):
+                section_title = Paragraph(section_name.replace('_', ' ').title(), styles['Heading2'])
+                story.append(section_title)
+                
+                for key, value in section_data.items():
+                    text = Paragraph(f"{key}: {value}", styles['Normal'])
+                    story.append(text)
+                story.append(Spacer(1, 12))
+        
+        doc.build(story)
+        
+        # Return file
+        return FileResponse(filepath, filename=filename, media_type='application/pdf')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+# Teacher Responsibility Endpoints
+
+@app.get("/api/teacher/assign")
+def assign_teacher(student_id: str, teacher_id: str, subject: str):
+    """Assign teacher to student for a specific subject"""
+    try:
+        assignment = assign_teacher_to_student(student_id, teacher_id, subject)
+        return assignment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Teacher assignment failed: {str(e)}")
+
+@app.get("/api/teacher/responsibilities/{teacher_id}")
+def get_teacher_resp(teacher_id: str):
+    """Get all responsibilities for a teacher"""
+    try:
+        responsibilities = get_teacher_responsibilities(teacher_id)
+        return responsibilities
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get responsibilities: {str(e)}")
+
+@app.get("/api/teacher/report/{teacher_id}")
+def get_teacher_report(teacher_id: str):
+    """Generate comprehensive teacher report"""
+    try:
+        report = generate_teacher_report(teacher_id)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Teacher report generation failed: {str(e)}")
 
 @app.get("/api/agents/comprehensive/{student_id}")
 def comprehensive_agent(student_id: str):

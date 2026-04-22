@@ -13,6 +13,9 @@ def generate_data():
             student_id TEXT,
             student_name TEXT,
             activity_type TEXT,
+            subject TEXT,
+            topic TEXT,
+            chapter TEXT,
             time_spent_mins INTEGER,
             marks_achieved_percent REAL,
             distraction_score INTEGER,
@@ -31,6 +34,24 @@ def generate_data():
 
     activities = ["Lesson Concept", "Practice Questions", "Quiz", "Chess Play", "Games", "Community Chat"]
     
+    subjects = ["Physics", "Chemistry", "Mathematics", "Biology", "English"]
+    
+    topics = {
+        "Physics": ["Mechanics", "Electricity", "Optics", "Thermodynamics"],
+        "Chemistry": ["Organic Chemistry", "Physical Chemistry", "Inorganic Chemistry"],
+        "Mathematics": ["Algebra", "Calculus", "Geometry", "Trigonometry"],
+        "Biology": ["Cell Biology", "Genetics", "Ecology"],
+        "English": ["Grammar", "Literature", "Writing"]
+    }
+    
+    chapters = {
+        "Physics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4"],
+        "Chemistry": ["Chapter 1", "Chapter 2", "Chapter 3"],
+        "Mathematics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4"],
+        "Biology": ["Chapter 1", "Chapter 2", "Chapter 3"],
+        "English": ["Chapter 1", "Chapter 2", "Chapter 3"]
+    }
+    
     start_date = datetime.now() - timedelta(days=7)
 
     for day in range(8):  # 7 days + today
@@ -42,6 +63,9 @@ def generate_data():
             
             for _ in range(num_activities):
                 activity = random.choice(activities)
+                subject = random.choice(subjects)
+                topic = random.choice(topics[subject])
+                chapter = random.choice(chapters[subject])
                 
                 # Default values
                 time_spent = random.randint(20, 60)
@@ -79,9 +103,9 @@ def generate_data():
 
                 cursor.execute('''
                     INSERT INTO student_activity 
-                    (student_id, student_name, activity_type, time_spent_mins, marks_achieved_percent, distraction_score, date)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (student["id"], student["name"], activity, time_spent, marks, distraction, current_date))
+                    (student_id, student_name, activity_type, subject, topic, chapter, time_spent_mins, marks_achieved_percent, distraction_score, date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (student["id"], student["name"], activity, subject, topic, chapter, time_spent, marks, distraction, current_date))
 
     conn.commit()
     conn.close()
