@@ -22,7 +22,23 @@ from agents import (
     export_class_data_to_csv,
     generate_student_chart_data,
     generate_class_chart_data,
-    generate_report_summary_text
+    generate_report_summary_text,
+    generate_parent_email,
+    generate_staff_notification,
+    create_intervention_task,
+    create_monitoring_task,
+    update_task_status,
+    get_assigned_tasks,
+    get_student_tasks,
+    get_overdue_tasks,
+    generate_pdf_report_content,
+    generate_meeting_agenda,
+    predict_student_performance,
+    detect_anomalies,
+    validate_student_data,
+    clean_student_data,
+    generate_calendar_event,
+    generate_recurring_schedule
 )
 
 app = FastAPI(title="Student Behavior Analysis PoC")
@@ -258,6 +274,162 @@ def get_report_summary(student_id: str):
         return summary
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
+# Communication Endpoints
+
+@app.get("/api/communication/parent-email/{student_id}")
+def get_parent_email(student_id: str, email_type: str = "report"):
+    """Generate email content for parent communication"""
+    try:
+        email_content = generate_parent_email(student_id, email_type)
+        return email_content
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Email generation failed: {str(e)}")
+
+@app.get("/api/communication/staff-notification/{student_id}")
+def get_staff_notification(student_id: str, notification_type: str = "intervention"):
+    """Generate notification content for staff/teachers"""
+    try:
+        notification = generate_staff_notification(student_id, notification_type)
+        return notification
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Notification generation failed: {str(e)}")
+
+# Task Management Endpoints
+
+@app.post("/api/tasks/intervention")
+def create_intervention_task_endpoint(student_id: str, assigned_to: str, due_date: str = None):
+    """Create intervention task"""
+    try:
+        task = create_intervention_task(student_id, assigned_to, due_date)
+        return task
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
+
+@app.post("/api/tasks/monitoring")
+def create_monitoring_task_endpoint(student_id: str, assigned_to: str, monitoring_period_days: int = 30):
+    """Create monitoring task"""
+    try:
+        task = create_monitoring_task(student_id, assigned_to, monitoring_period_days)
+        return task
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
+
+@app.put("/api/tasks/{task_id}/status")
+def update_task_status_endpoint(task_id: str, status: str, notes: str = None):
+    """Update task status"""
+    try:
+        updated_task = update_task_status(task_id, status, notes)
+        return updated_task
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Task update failed: {str(e)}")
+
+@app.get("/api/tasks/assigned/{assigned_to}")
+def get_assigned_tasks_endpoint(assigned_to: str):
+    """Get tasks assigned to a person"""
+    try:
+        tasks = get_assigned_tasks(assigned_to)
+        return tasks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get assigned tasks: {str(e)}")
+
+@app.get("/api/tasks/student/{student_id}")
+def get_student_tasks_endpoint(student_id: str):
+    """Get tasks for a student"""
+    try:
+        tasks = get_student_tasks(student_id)
+        return tasks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get student tasks: {str(e)}")
+
+@app.get("/api/tasks/overdue")
+def get_overdue_tasks_endpoint():
+    """Get overdue tasks"""
+    try:
+        tasks = get_overdue_tasks()
+        return tasks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get overdue tasks: {str(e)}")
+
+# Document Generation Endpoints
+
+@app.get("/api/documents/pdf-report/{student_id}")
+def get_pdf_report_content(student_id: str):
+    """Generate PDF report content"""
+    try:
+        pdf_content = generate_pdf_report_content(student_id)
+        return pdf_content
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF report generation failed: {str(e)}")
+
+@app.get("/api/documents/meeting-agenda/{student_id}")
+def get_meeting_agenda(student_id: str, meeting_type: str = "parent_teacher"):
+    """Generate meeting agenda"""
+    try:
+        agenda = generate_meeting_agenda(student_id, meeting_type)
+        return agenda
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Meeting agenda generation failed: {str(e)}")
+
+# Advanced Analytics Endpoints
+
+@app.get("/api/analytics/predict/{student_id}")
+def get_performance_prediction(student_id: str, days_ahead: int = 30):
+    """Predict student performance"""
+    try:
+        prediction = predict_student_performance(student_id, days_ahead)
+        return prediction
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+@app.get("/api/analytics/anomalies/{student_id}")
+def get_anomalies(student_id: str, threshold_std: float = 2.0):
+    """Detect anomalies in student data"""
+    try:
+        anomalies = detect_anomalies(student_id, threshold_std)
+        return anomalies
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
+
+# Data Quality Endpoints
+
+@app.get("/api/data-quality/validate/{student_id}")
+def validate_data(student_id: str):
+    """Validate student data quality"""
+    try:
+        validation = validate_student_data(student_id)
+        return validation
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Data validation failed: {str(e)}")
+
+@app.get("/api/data-quality/clean/{student_id}")
+def clean_data(student_id: str):
+    """Clean student data"""
+    try:
+        cleaning = clean_student_data(student_id)
+        return cleaning
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Data cleaning failed: {str(e)}")
+
+# Calendar Integration Endpoints
+
+@app.get("/api/calendar/event/{student_id}")
+def get_calendar_event(student_id: str, event_type: str = "parent_meeting"):
+    """Generate calendar event"""
+    try:
+        event = generate_calendar_event(student_id, event_type)
+        return event
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Calendar event generation failed: {str(e)}")
+
+@app.get("/api/calendar/schedule/{student_id}")
+def get_recurring_schedule(student_id: str, frequency: str = "weekly"):
+    """Generate recurring schedule"""
+    try:
+        schedule = generate_recurring_schedule(student_id, frequency)
+        return schedule
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Schedule generation failed: {str(e)}")
 
 @app.get("/api/agents/comprehensive/{student_id}")
 def comprehensive_agent(student_id: str):
