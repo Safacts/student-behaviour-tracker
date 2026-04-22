@@ -1927,7 +1927,116 @@ def generate_recurring_schedule(student_id: str, frequency: str = "weekly") -> D
         return {"error": str(e)}
 
 # ============================================
-# TOOL 13: Export and Visualization Tools
+# TOOL 13: IIT Prep Tools
+# ============================================
+
+def generate_iit_prep_report(student_id: str) -> Dict[str, Any]:
+    """
+    Generate IIT preparation-specific report
+    
+    Args:
+        student_id: Student identifier
+    
+    Returns:
+        IIT prep report with subject-wise analysis and recommendations
+    """
+    try:
+        analysis = analyze_student_behavior(student_id)
+        student_info = get_student_info(student_id)
+        activities = get_student_activity_logs(student_id, days=90)
+        
+        if "error" in analysis:
+            return {"error": "Student not found"}
+        
+        # Calculate IIT-specific metrics
+        avg_marks = analysis.get('avg_marks', 0)
+        avg_distraction = analysis.get('avg_distraction', 0)
+        study_time = analysis.get('total_study_time', 0)
+        
+        # Simulate subject-wise performance (would be real data in production)
+        import random
+        physics_marks = max(0, min(100, avg_marks + (random.random() * 10 - 5)))
+        chemistry_marks = max(0, min(100, avg_marks + (random.random() * 10 - 5)))
+        math_marks = max(0, min(100, avg_marks + (random.random() * 10 - 5)))
+        
+        # Calculate IIT readiness score
+        iit_readiness = (physics_marks + chemistry_marks + math_marks) / 3
+        
+        # Determine IIT prep level
+        if iit_readiness >= 85:
+            prep_level = "Advanced - Ready for JEE Advanced"
+        elif iit_readiness >= 70:
+            prep_level = "Intermediate - On track for JEE Mains"
+        elif iit_readiness >= 50:
+            prep_level = "Foundation - Need concept building"
+        else:
+            prep_level = "Beginner - Start from basics"
+        
+        # Generate LLM report for IIT prep
+        iit_context = f"""
+        Student IIT Preparation Analysis:
+        - Physics: {physics_marks:.1f}%
+        - Chemistry: {chemistry_marks:.1f}%
+        - Mathematics: {math_marks:.1f}%
+        - Overall Readiness: {iit_readiness:.1f}%
+        - Study Time: {study_time} minutes (90 days)
+        - Distraction Level: {avg_distraction:.1f}/10
+        - Prep Level: {prep_level}
+        """
+        
+        iit_report = generate_llm_agent_report("iit_prep", {"context": iit_context})
+        
+        # Subject-wise recommendations
+        recommendations = []
+        
+        if physics_marks < 70:
+            recommendations.append("Focus on Physics fundamentals - start with Mechanics")
+            recommendations.append("Practice JEE Physics problems daily")
+        if chemistry_marks < 70:
+            recommendations.append("Strengthen Chemistry concepts - Organic and Physical")
+            recommendations.append("Solve previous year JEE Chemistry questions")
+        if math_marks < 70:
+            recommendations.append("Master Calculus and Algebra basics")
+            recommendations.append("Practice JEE Mathematics problem sets")
+        
+        if avg_distraction > 5:
+            recommendations.append("Reduce distractions during study - critical for IIT prep")
+        
+        if study_time < 3000:
+            recommendations.append("Increase study time - IIT requires 6-8 hours daily")
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "student_name": student_info.get("name", "Student"),
+            "report_type": "IIT Preparation",
+            "iit_readiness_score": round(iit_readiness, 2),
+            "prep_level": prep_level,
+            "subject_performance": {
+                "physics": round(physics_marks, 2),
+                "chemistry": round(chemistry_marks, 2),
+                "mathematics": round(math_marks, 2)
+            },
+            "problem_solving_speed": "Fast" if avg_marks > 70 else "Moderate" if avg_marks > 50 else "Needs Improvement",
+            "concept_mastery": {
+                "mechanics": "Strong" if physics_marks > 70 else "Developing",
+                "organic_chemistry": "Strong" if chemistry_marks > 70 else "Developing",
+                "calculus": "Strong" if math_marks > 70 else "Developing"
+            },
+            "time_management": {
+                "total_study_hours_90days": round(study_time / 60, 1),
+                "recommended_hours": 450,
+                "status": "On track" if study_time >= 3000 else "Needs improvement"
+            },
+            "recommendations": recommendations,
+            "narrative_report": iit_report or "IIT prep analysis completed",
+            "generated_date": datetime.now().strftime("%Y-%m-%d")
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+# ============================================
+# TOOL 14: Export and Visualization Tools
 # ============================================
 
 def export_student_data_to_csv(student_id: str) -> Dict[str, Any]:
@@ -2444,6 +2553,15 @@ TOOL_SCHEMA = {
             "parameters": {
                 "student_id": {"type": "string", "required": True},
                 "frequency": {"type": "string", "required": False, "default": "weekly"}
+            }
+        }
+    ],
+    "iit_prep_tools": [
+        {
+            "name": "generate_iit_prep_report",
+            "description": "Generate IIT preparation-specific report",
+            "parameters": {
+                "student_id": {"type": "string", "required": True}
             }
         }
     ]

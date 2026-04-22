@@ -38,7 +38,8 @@ from agents import (
     validate_student_data,
     clean_student_data,
     generate_calendar_event,
-    generate_recurring_schedule
+    generate_recurring_schedule,
+    generate_iit_prep_report
 )
 
 app = FastAPI(title="Student Behavior Analysis PoC")
@@ -430,6 +431,17 @@ def get_recurring_schedule(student_id: str, frequency: str = "weekly"):
         return schedule
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Schedule generation failed: {str(e)}")
+
+# IIT Prep Endpoints
+
+@app.get("/api/iit-prep/report/{student_id}")
+def get_iit_prep_report(student_id: str):
+    """Generate IIT preparation report"""
+    try:
+        report = generate_iit_prep_report(student_id)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"IIT prep report generation failed: {str(e)}")
 
 @app.get("/api/agents/comprehensive/{student_id}")
 def comprehensive_agent(student_id: str):
