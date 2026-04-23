@@ -50,6 +50,7 @@ from agents import (
     get_teacher_responsibilities,
     generate_teacher_report
 )
+from task_manager import task_manager, teacher_assignment_manager
 
 app = FastAPI(title="Student Behavior Analysis PoC")
 
@@ -647,6 +648,82 @@ def read_agents():
 @app.get("/docs")
 def read_docs():
     return FileResponse("docs.html")
+
+# V2 Database-backed Task Management Endpoints
+
+@app.get("/api/v2/tasks/create/intervention")
+def create_intervention_v2(student_id: str, priority: str = "medium", assigned_to: str = None):
+    """Create an intervention task (database-backed)"""
+    try:
+        task = task_manager.create_intervention_task(student_id, priority, assigned_to=assigned_to)
+        return task
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
+
+@app.get("/api/v2/tasks/create/monitoring")
+def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_days: int = 30):
+    """Create a monitoring task (database-backed)"""
+    try:
+        task = task_manager.create_monitoring_task(student_id, assigned_to, monitoring_period_days)
+        return task
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
+
+@app.get("/api/v2/tasks/complete/{task_id}")
+def complete_task_v2(task_id: str, completed_by: str, notes: str = None):
+    """Mark a task as completed (database-backed)"""
+    try:
+        result = task_manager.update_task_status(task_id, "completed", notes, completed_by)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Task completion failed: {str(e)}")
+
+@app.get("/api/v2/tasks/assigned/{assigned_to}")
+def get_tasks_for_user_v2(assigned_to: str):
+    """Get all tasks assigned to a user (database-backed)"""
+    try:
+        tasks = task_manager.get_assigned_tasks(assigned_to)
+        return tasks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get tasks: {str(e)}")
+
+@app.get("/api/v2/tasks/student/{student_id}")
+def get_tasks_for_student_v2(student_id: str):
+    """Get all tasks for a student (database-backed)"""
+    try:
+        tasks = task_manager.get_student_tasks(student_id)
+        return tasks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get student tasks: {str(e)}")
+
+@app.get("/api/v2/tasks/overdue")
+def get_overdue_tasks_list_v2():
+    """Get all overdue tasks (database-backed)"""
+    try:
+        tasks = task_manager.get_overdue_tasks()
+        return tasks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get overdue tasks: {str(e)}")
+
+# V2 Teacher Assignment Endpoints
+
+@app.get("/api/v2/teacher/assign")
+def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_by: str = "system"):
+    """Assign teacher to student (database-backed)"""
+    try:
+        assignment = teacher_assignment_manager.assign_teacher_to_student(student_id, teacher_id, subject, assigned_by)
+        return assignment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Teacher assignment failed: {str(e)}")
+
+@app.get("/api/v2/teacher/responsibilities/{teacher_id}")
+def get_teacher_resp_v2(teacher_id: str):
+    """Get all responsibilities for a teacher (database-backed)"""
+    try:
+        responsibilities = teacher_assignment_manager.get_teacher_responsibilities(teacher_id)
+        return responsibilities
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get responsibilities: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -23,8 +23,60 @@ def generate_data():
         )
     ''')
 
+    # Create tasks table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id TEXT UNIQUE,
+            task_type TEXT,
+            student_id TEXT,
+            assigned_to TEXT,
+            assigned_by TEXT,
+            status TEXT DEFAULT 'pending',
+            priority TEXT DEFAULT 'medium',
+            due_date TEXT,
+            created_at TEXT,
+            completed_at TEXT,
+            completed_by TEXT,
+            notes TEXT,
+            FOREIGN KEY (student_id) REFERENCES student_activity(student_id)
+        )
+    ''')
+
+    # Create teacher_assignments table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS teacher_assignments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT,
+            teacher_id TEXT,
+            subject TEXT,
+            assigned_at TEXT,
+            assigned_by TEXT,
+            is_active INTEGER DEFAULT 1,
+            FOREIGN KEY (student_id) REFERENCES student_activity(student_id)
+        )
+    ''')
+
+    # Create users table for authentication
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT UNIQUE,
+            username TEXT UNIQUE,
+            password_hash TEXT,
+            role TEXT,
+            name TEXT,
+            email TEXT,
+            created_at TEXT,
+            is_active INTEGER DEFAULT 1
+        )
+    ''')
+
     # Clear old data
     cursor.execute('DELETE FROM student_activity')
+    cursor.execute('DELETE FROM tasks')
+    cursor.execute('DELETE FROM teacher_assignments')
+    cursor.execute('DELETE FROM users')
 
     students = [
         {"id": "S001", "name": "Alex", "persona": "distracted"},
@@ -106,6 +158,37 @@ def generate_data():
                     (student_id, student_name, activity_type, subject, topic, chapter, time_spent_mins, marks_achieved_percent, distraction_score, date)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (student["id"], student["name"], activity, subject, topic, chapter, time_spent, marks, distraction, current_date))
+
+    # Add sample users
+    import hashlib
+    def hash_password(password):
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    users = [
+        {"user_id": "U001", "username": "admin", "password": "admin123", "role": "admin", "name": "System Admin", "email": "admin@school.edu"},
+        {"user_id": "T001", "username": "teacher1", "password": "teacher123", "role": "teacher", "name": "John Smith", "email": "john@school.edu"},
+        {"user_id": "T002", "username": "teacher2", "password": "teacher123", "role": "teacher", "name": "Jane Doe", "email": "jane@school.edu"},
+        {"user_id": "P001", "username": "parent1", "password": "parent123", "role": "parent", "name": "Parent Alex", "email": "parent1@email.com"},
+    ]
+
+    for user in users:
+        cursor.execute('''
+            INSERT INTO users (user_id, username, password_hash, role, name, email, created_at, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user["user_id"], user["username"], hash_password(user["password"]), user["role"], user["name"], user["email"], datetime.now().strftime('%Y-%m-%d'), 1))
+
+    # Add sample teacher assignments
+    teacher_assignments = [
+        {"student_id": "S001", "teacher_id": "T001", "subject": "Physics"},
+        {"student_id": "S001", "teacher_id": "T002", "subject": "Chemistry"},
+        {"student_id": "S002", "teacher_id": "T001", "subject": "Mathematics"},
+    ]
+
+    for assignment in teacher_assignments:
+        cursor.execute('''
+            INSERT INTO teacher_assignments (student_id, teacher_id, subject, assigned_at, assigned_by, is_active)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (assignment["student_id"], assignment["teacher_id"], assignment["subject"], datetime.now().strftime('%Y-%m-%d'), "U001", 1))
 
     conn.commit()
     conn.close()
