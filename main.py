@@ -53,6 +53,7 @@ from agents import (
 from task_manager import task_manager, teacher_assignment_manager
 from validators import moderate_validator
 from auth import auth
+from rate_limiter import rate_limiter
 import logging
 
 # Configure logging
@@ -67,8 +68,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Authentication dependency
-async def verify_auth_token(authorization: str = Header(None)) -> Optional[str]:
+async def verify_auth_token(authorization: str = Header(None), request: Request = None) -> Optional[str]:
     """Verify authentication token from Authorization header"""
+    # Rate limiting check
+    if request:
+        client_ip = request.client.host if request.client else "unknown"
+        allowed, rate_info = rate_limiter.is_allowed(client_ip)
+        if not allowed:
+            logger.warning(f"Rate limit exceeded for {client_ip}")
+            raise HTTPException(status_code=429, detail=rate_info)
+    
     if not authorization:
         logger.warning("Missing authorization header")
         raise HTTPException(status_code=401, detail="Missing authorization header")
@@ -686,7 +695,7 @@ def read_docs():
 # V2 Database-backed Task Management Endpoints
 
 @app.get("/api/v2/tasks/create/intervention")
-async def create_intervention_v2(student_id: str, priority: str = "medium", assigned_to: str = None, current_user: str = Depends(verify_auth_token)):
+async def create_intervention_v2(student_id: str, priority: str = "medium", assigned_to: str = None, current_user: str = Depends(verify_auth_token), request: Request = None):
     """Create an intervention task (database-backed)"""
     try:
         logger.info(f"User {current_user} creating intervention task for student {student_id}")
@@ -718,7 +727,7 @@ async def create_intervention_v2(student_id: str, priority: str = "medium", assi
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
 @app.get("/api/v2/tasks/create/monitoring")
-async def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_days: int = 30, current_user: str = Depends(verify_auth_token)):
+async def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_days: int = 30, current_user: str = Depends(verify_auth_token), request: Request = None):
     """Create a monitoring task (database-backed)"""
     try:
         logger.info(f"User {current_user} creating monitoring task for student {student_id}")
@@ -754,7 +763,7 @@ async def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_per
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
 @app.get("/api/v2/tasks/complete/{task_id}")
-async def complete_task_v2(task_id: str, completed_by: str, notes: str = None, current_user: str = Depends(verify_auth_token)):
+async def complete_task_v2(task_id: str, completed_by: str, notes: str = None, current_user: str = Depends(verify_auth_token), request: Request = None):
     """Mark a task as completed (database-backed)"""
     try:
         logger.info(f"User {current_user} marking task {task_id} as completed by {completed_by}")
@@ -785,7 +794,7 @@ async def complete_task_v2(task_id: str, completed_by: str, notes: str = None, c
         raise HTTPException(status_code=500, detail=f"Task completion failed: {str(e)}")
 
 @app.get("/api/v2/tasks/assigned/{assigned_to}")
-async def get_tasks_for_user_v2(assigned_to: str, current_user: str = Depends(verify_auth_token)):
+async def get_tasks_for_user_v2(assigned_to: str, current_user: str = Depends(verify_auth_token), request: Request = None):
     """Get all tasks assigned to a user (database-backed)"""
     try:
         logger.info(f"User {current_user} getting tasks assigned to {assigned_to}")
@@ -810,7 +819,7 @@ async def get_tasks_for_user_v2(assigned_to: str, current_user: str = Depends(ve
         raise HTTPException(status_code=500, detail=f"Failed to get tasks: {str(e)}")
 
 @app.get("/api/v2/tasks/student/{student_id}")
-async def get_tasks_for_student_v2(student_id: str, current_user: str = Depends(verify_auth_token)):
+async def get_tasks_for_student_v2(student_id: str, current_user: str = Depends(verify_auth_token), request: Request = None):
     """Get all tasks for a student (database-backed)"""
     try:
         logger.info(f"User {current_user} getting tasks for student {student_id}")
@@ -840,7 +849,7 @@ async def get_tasks_for_student_v2(student_id: str, current_user: str = Depends(
         raise HTTPException(status_code=500, detail=f"Failed to get student tasks: {str(e)}")
 
 @app.get("/api/v2/tasks/overdue")
-async def get_overdue_tasks_list_v2(current_user: str = Depends(verify_auth_token)):
+async def get_overdue_tasks_list_v2(current_user: str = Depends(verify_auth_token), request: Request = None):
     """Get all overdue tasks (database-backed)"""
     try:
         logger.info(f"User {current_user} getting overdue tasks")
@@ -862,7 +871,7 @@ async def get_overdue_tasks_list_v2(current_user: str = Depends(verify_auth_toke
 # V2 Teacher Assignment Endpoints
 
 @app.get("/api/v2/teacher/assign")
-async def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_by: str = "system", current_user: str = Depends(verify_auth_token)):
+async def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_by: str = "system", current_user: str = Depends(verify_auth_token), request: Request = None):
     """Assign teacher to student (database-backed)"""
     try:
         logger.info(f"User {current_user} assigning teacher {teacher_id} to student {student_id} for {subject}")
@@ -898,7 +907,7 @@ async def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assi
         raise HTTPException(status_code=500, detail=f"Teacher assignment failed: {str(e)}")
 
 @app.get("/api/v2/teacher/responsibilities/{teacher_id}")
-async def get_teacher_resp_v2(teacher_id: str, current_user: str = Depends(verify_auth_token)):
+async def get_teacher_resp_v2(teacher_id: str, current_user: str = Depends(verify_auth_token), request: Request = None):
     """Get all responsibilities for a teacher (database-backed)"""
     try:
         logger.info(f"User {current_user} getting responsibilities for teacher {teacher_id}")
