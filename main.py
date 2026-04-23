@@ -52,6 +52,18 @@ from agents import (
 )
 from task_manager import task_manager, teacher_assignment_manager
 from validators import moderate_validator
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Student Behavior Analysis PoC")
 
@@ -656,77 +668,100 @@ def read_docs():
 def create_intervention_v2(student_id: str, priority: str = "medium", assigned_to: str = None):
     """Create an intervention task (database-backed)"""
     try:
+        logger.info(f"Creating intervention task for student {student_id}")
         # Validate inputs
         valid, error = moderate_validator.validate_student_id(student_id)
         if not valid:
+            logger.warning(f"Invalid student ID: {student_id} - {error}")
             raise HTTPException(status_code=400, detail=f"Invalid student ID: {error}")
         
         if priority not in ["low", "medium", "high", "critical"]:
+            logger.warning(f"Invalid priority: {priority}")
             raise HTTPException(status_code=400, detail="Invalid priority. Must be: low, medium, high, or critical")
         
         task = task_manager.create_intervention_task(student_id, priority, assigned_to=assigned_to)
+        logger.info(f"Successfully created intervention task {task.get('task_id')}")
         return task
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Task creation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
 @app.get("/api/v2/tasks/create/monitoring")
 def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_days: int = 30):
     """Create a monitoring task (database-backed)"""
     try:
+        logger.info(f"Creating monitoring task for student {student_id}")
         # Validate inputs
         valid, error = moderate_validator.validate_student_id(student_id)
         if not valid:
+            logger.warning(f"Invalid student ID: {student_id} - {error}")
             raise HTTPException(status_code=400, detail=f"Invalid student ID: {error}")
         
         if not assigned_to:
+            logger.warning("assigned_to parameter is required")
             raise HTTPException(status_code=400, detail="assigned_to parameter is required")
         
         if monitoring_period_days < 1 or monitoring_period_days > 365:
+            logger.warning(f"Invalid monitoring period: {monitoring_period_days}")
             raise HTTPException(status_code=400, detail="Monitoring period must be between 1 and 365 days")
         
         task = task_manager.create_monitoring_task(student_id, assigned_to, monitoring_period_days)
+        logger.info(f"Successfully created monitoring task {task.get('task_id')}")
         return task
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Task creation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
 @app.get("/api/v2/tasks/complete/{task_id}")
 def complete_task_v2(task_id: str, completed_by: str, notes: str = None):
     """Mark a task as completed (database-backed)"""
     try:
+        logger.info(f"Marking task {task_id} as completed by {completed_by}")
         result = task_manager.update_task_status(task_id, "completed", notes, completed_by)
+        logger.info(f"Successfully completed task {task_id}")
         return result
     except Exception as e:
+        logger.error(f"Task completion failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Task completion failed: {str(e)}")
 
 @app.get("/api/v2/tasks/assigned/{assigned_to}")
 def get_tasks_for_user_v2(assigned_to: str):
     """Get all tasks assigned to a user (database-backed)"""
     try:
+        logger.info(f"Getting tasks assigned to {assigned_to}")
         tasks = task_manager.get_assigned_tasks(assigned_to)
+        logger.info(f"Found {tasks.get('task_count', 0)} tasks")
         return tasks
     except Exception as e:
+        logger.error(f"Failed to get tasks: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get tasks: {str(e)}")
 
 @app.get("/api/v2/tasks/student/{student_id}")
 def get_tasks_for_student_v2(student_id: str):
     """Get all tasks for a student (database-backed)"""
     try:
+        logger.info(f"Getting tasks for student {student_id}")
         tasks = task_manager.get_student_tasks(student_id)
+        logger.info(f"Found {tasks.get('task_count', 0)} tasks")
         return tasks
     except Exception as e:
+        logger.error(f"Failed to get student tasks: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get student tasks: {str(e)}")
 
 @app.get("/api/v2/tasks/overdue")
 def get_overdue_tasks_list_v2():
     """Get all overdue tasks (database-backed)"""
     try:
+        logger.info("Getting overdue tasks")
         tasks = task_manager.get_overdue_tasks()
+        logger.info(f"Found {tasks.get('total_overdue', 0)} overdue tasks")
         return tasks
     except Exception as e:
+        logger.error(f"Failed to get overdue tasks: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get overdue tasks: {str(e)}")
 
 # V2 Teacher Assignment Endpoints
@@ -735,31 +770,40 @@ def get_overdue_tasks_list_v2():
 def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_by: str = "system"):
     """Assign teacher to student (database-backed)"""
     try:
+        logger.info(f"Assigning teacher {teacher_id} to student {student_id} for {subject}")
         # Validate inputs
         valid, error = moderate_validator.validate_student_id(student_id)
         if not valid:
+            logger.warning(f"Invalid student ID: {student_id} - {error}")
             raise HTTPException(status_code=400, detail=f"Invalid student ID: {error}")
         
         if not teacher_id:
+            logger.warning("Teacher ID is required")
             raise HTTPException(status_code=400, detail="Teacher ID is required")
         
         if not subject:
+            logger.warning("Subject is required")
             raise HTTPException(status_code=400, detail="Subject is required")
         
         assignment = teacher_assignment_manager.assign_teacher_to_student(student_id, teacher_id, subject, assigned_by)
+        logger.info(f"Successfully assigned teacher {teacher_id} to student {student_id}")
         return assignment
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Teacher assignment failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Teacher assignment failed: {str(e)}")
 
 @app.get("/api/v2/teacher/responsibilities/{teacher_id}")
 def get_teacher_resp_v2(teacher_id: str):
     """Get all responsibilities for a teacher (database-backed)"""
     try:
+        logger.info(f"Getting responsibilities for teacher {teacher_id}")
         responsibilities = teacher_assignment_manager.get_teacher_responsibilities(teacher_id)
+        logger.info(f"Found {responsibilities.get('total_responsibilities', 0)} responsibilities")
         return responsibilities
     except Exception as e:
+        logger.error(f"Failed to get responsibilities: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get responsibilities: {str(e)}")
 
 if __name__ == "__main__":
