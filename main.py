@@ -51,6 +51,7 @@ from agents import (
     generate_teacher_report
 )
 from task_manager import task_manager, teacher_assignment_manager
+from validators import moderate_validator
 
 app = FastAPI(title="Student Behavior Analysis PoC")
 
@@ -655,8 +656,18 @@ def read_docs():
 def create_intervention_v2(student_id: str, priority: str = "medium", assigned_to: str = None):
     """Create an intervention task (database-backed)"""
     try:
+        # Validate inputs
+        valid, error = moderate_validator.validate_student_id(student_id)
+        if not valid:
+            raise HTTPException(status_code=400, detail=f"Invalid student ID: {error}")
+        
+        if priority not in ["low", "medium", "high", "critical"]:
+            raise HTTPException(status_code=400, detail="Invalid priority. Must be: low, medium, high, or critical")
+        
         task = task_manager.create_intervention_task(student_id, priority, assigned_to=assigned_to)
         return task
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
@@ -664,8 +675,21 @@ def create_intervention_v2(student_id: str, priority: str = "medium", assigned_t
 def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_days: int = 30):
     """Create a monitoring task (database-backed)"""
     try:
+        # Validate inputs
+        valid, error = moderate_validator.validate_student_id(student_id)
+        if not valid:
+            raise HTTPException(status_code=400, detail=f"Invalid student ID: {error}")
+        
+        if not assigned_to:
+            raise HTTPException(status_code=400, detail="assigned_to parameter is required")
+        
+        if monitoring_period_days < 1 or monitoring_period_days > 365:
+            raise HTTPException(status_code=400, detail="Monitoring period must be between 1 and 365 days")
+        
         task = task_manager.create_monitoring_task(student_id, assigned_to, monitoring_period_days)
         return task
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
@@ -711,8 +735,21 @@ def get_overdue_tasks_list_v2():
 def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_by: str = "system"):
     """Assign teacher to student (database-backed)"""
     try:
+        # Validate inputs
+        valid, error = moderate_validator.validate_student_id(student_id)
+        if not valid:
+            raise HTTPException(status_code=400, detail=f"Invalid student ID: {error}")
+        
+        if not teacher_id:
+            raise HTTPException(status_code=400, detail="Teacher ID is required")
+        
+        if not subject:
+            raise HTTPException(status_code=400, detail="Subject is required")
+        
         assignment = teacher_assignment_manager.assign_teacher_to_student(student_id, teacher_id, subject, assigned_by)
         return assignment
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Teacher assignment failed: {str(e)}")
 
