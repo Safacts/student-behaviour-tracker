@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Header, Request, Response, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -52,6 +52,7 @@ from agents import (
 )
 from task_manager import task_manager, teacher_assignment_manager
 from validators import moderate_validator
+from auth import auth
 import logging
 
 # Configure logging
@@ -64,6 +65,26 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Authentication dependency
+async def verify_auth_token(authorization: str = Header(None)) -> Optional[str]:
+    """Verify authentication token from Authorization header"""
+    if not authorization:
+        logger.warning("Missing authorization header")
+        raise HTTPException(status_code=401, detail="Missing authorization header")
+    
+    if not authorization.startswith("Bearer "):
+        logger.warning("Invalid authorization format")
+        raise HTTPException(status_code=401, detail="Invalid authorization format. Use: Bearer <token>")
+    
+    token = authorization.split(" ")[1]
+    user_info = auth.validate_token(token)
+    
+    if not user_info:
+        logger.warning(f"Invalid or expired token: {token[:10]}...")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    return user_info["user_id"]
 
 app = FastAPI(title="Student Behavior Analysis PoC")
 
@@ -665,10 +686,10 @@ def read_docs():
 # V2 Database-backed Task Management Endpoints
 
 @app.get("/api/v2/tasks/create/intervention")
-def create_intervention_v2(student_id: str, priority: str = "medium", assigned_to: str = None):
+async def create_intervention_v2(student_id: str, priority: str = "medium", assigned_to: str = None, current_user: str = Depends(verify_auth_token)):
     """Create an intervention task (database-backed)"""
     try:
-        logger.info(f"Creating intervention task for student {student_id}")
+        logger.info(f"User {current_user} creating intervention task for student {student_id}")
         # Validate inputs
         valid, error = moderate_validator.validate_student_id(student_id)
         if not valid:
@@ -697,10 +718,10 @@ def create_intervention_v2(student_id: str, priority: str = "medium", assigned_t
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
 @app.get("/api/v2/tasks/create/monitoring")
-def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_days: int = 30):
+async def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_days: int = 30, current_user: str = Depends(verify_auth_token)):
     """Create a monitoring task (database-backed)"""
     try:
-        logger.info(f"Creating monitoring task for student {student_id}")
+        logger.info(f"User {current_user} creating monitoring task for student {student_id}")
         # Validate inputs
         valid, error = moderate_validator.validate_student_id(student_id)
         if not valid:
@@ -733,10 +754,10 @@ def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_da
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
 @app.get("/api/v2/tasks/complete/{task_id}")
-def complete_task_v2(task_id: str, completed_by: str, notes: str = None):
+async def complete_task_v2(task_id: str, completed_by: str, notes: str = None, current_user: str = Depends(verify_auth_token)):
     """Mark a task as completed (database-backed)"""
     try:
-        logger.info(f"Marking task {task_id} as completed by {completed_by}")
+        logger.info(f"User {current_user} marking task {task_id} as completed by {completed_by}")
         
         if not task_id:
             logger.warning("Task ID is required")
@@ -764,10 +785,10 @@ def complete_task_v2(task_id: str, completed_by: str, notes: str = None):
         raise HTTPException(status_code=500, detail=f"Task completion failed: {str(e)}")
 
 @app.get("/api/v2/tasks/assigned/{assigned_to}")
-def get_tasks_for_user_v2(assigned_to: str):
+async def get_tasks_for_user_v2(assigned_to: str, current_user: str = Depends(verify_auth_token)):
     """Get all tasks assigned to a user (database-backed)"""
     try:
-        logger.info(f"Getting tasks assigned to {assigned_to}")
+        logger.info(f"User {current_user} getting tasks assigned to {assigned_to}")
         
         if not assigned_to:
             logger.warning("assigned_to parameter is required")
@@ -789,10 +810,10 @@ def get_tasks_for_user_v2(assigned_to: str):
         raise HTTPException(status_code=500, detail=f"Failed to get tasks: {str(e)}")
 
 @app.get("/api/v2/tasks/student/{student_id}")
-def get_tasks_for_student_v2(student_id: str):
+async def get_tasks_for_student_v2(student_id: str, current_user: str = Depends(verify_auth_token)):
     """Get all tasks for a student (database-backed)"""
     try:
-        logger.info(f"Getting tasks for student {student_id}")
+        logger.info(f"User {current_user} getting tasks for student {student_id}")
         
         if not student_id:
             logger.warning("Student ID is required")
@@ -819,10 +840,10 @@ def get_tasks_for_student_v2(student_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to get student tasks: {str(e)}")
 
 @app.get("/api/v2/tasks/overdue")
-def get_overdue_tasks_list_v2():
+async def get_overdue_tasks_list_v2(current_user: str = Depends(verify_auth_token)):
     """Get all overdue tasks (database-backed)"""
     try:
-        logger.info("Getting overdue tasks")
+        logger.info(f"User {current_user} getting overdue tasks")
         tasks = task_manager.get_overdue_tasks()
         
         # Handle database errors
@@ -841,10 +862,10 @@ def get_overdue_tasks_list_v2():
 # V2 Teacher Assignment Endpoints
 
 @app.get("/api/v2/teacher/assign")
-def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_by: str = "system"):
+async def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_by: str = "system", current_user: str = Depends(verify_auth_token)):
     """Assign teacher to student (database-backed)"""
     try:
-        logger.info(f"Assigning teacher {teacher_id} to student {student_id} for {subject}")
+        logger.info(f"User {current_user} assigning teacher {teacher_id} to student {student_id} for {subject}")
         # Validate inputs
         valid, error = moderate_validator.validate_student_id(student_id)
         if not valid:
@@ -877,10 +898,10 @@ def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_b
         raise HTTPException(status_code=500, detail=f"Teacher assignment failed: {str(e)}")
 
 @app.get("/api/v2/teacher/responsibilities/{teacher_id}")
-def get_teacher_resp_v2(teacher_id: str):
+async def get_teacher_resp_v2(teacher_id: str, current_user: str = Depends(verify_auth_token)):
     """Get all responsibilities for a teacher (database-backed)"""
     try:
-        logger.info(f"Getting responsibilities for teacher {teacher_id}")
+        logger.info(f"User {current_user} getting responsibilities for teacher {teacher_id}")
         
         if not teacher_id:
             logger.warning("Teacher ID is required")
@@ -900,6 +921,34 @@ def get_teacher_resp_v2(teacher_id: str):
     except Exception as e:
         logger.error(f"Failed to get responsibilities: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get responsibilities: {str(e)}")
+
+# Authentication Endpoints
+
+@app.get("/api/auth/token")
+def generate_token(user_id: str):
+    """Generate an authentication token for testing (in production, use proper login)"""
+    try:
+        logger.info(f"Generating token for user {user_id}")
+        token = auth.generate_token(user_id)
+        return {
+            "success": True,
+            "user_id": user_id,
+            "token": token,
+            "message": "Use this token in Authorization header as: Bearer <token>"
+        }
+    except Exception as e:
+        logger.error(f"Token generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Token generation failed: {str(e)}")
+
+@app.get("/api/auth/stats")
+def get_auth_stats():
+    """Get authentication system statistics"""
+    try:
+        stats = auth.get_user_stats()
+        return stats
+    except Exception as e:
+        logger.error(f"Failed to get auth stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get auth stats: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
