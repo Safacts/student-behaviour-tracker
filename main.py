@@ -680,6 +680,14 @@ def create_intervention_v2(student_id: str, priority: str = "medium", assigned_t
             raise HTTPException(status_code=400, detail="Invalid priority. Must be: low, medium, high, or critical")
         
         task = task_manager.create_intervention_task(student_id, priority, assigned_to=assigned_to)
+        
+        # Handle database errors
+        if "error" in task:
+            logger.error(f"Database error: {task['error']}")
+            if "already exists" in task.get("error", "").lower():
+                raise HTTPException(status_code=409, detail=task["error"])
+            raise HTTPException(status_code=500, detail=task["error"])
+        
         logger.info(f"Successfully created intervention task {task.get('task_id')}")
         return task
     except HTTPException:
@@ -708,6 +716,14 @@ def create_monitoring_v2(student_id: str, assigned_to: str, monitoring_period_da
             raise HTTPException(status_code=400, detail="Monitoring period must be between 1 and 365 days")
         
         task = task_manager.create_monitoring_task(student_id, assigned_to, monitoring_period_days)
+        
+        # Handle database errors
+        if "error" in task:
+            logger.error(f"Database error: {task['error']}")
+            if "already exists" in task.get("error", "").lower():
+                raise HTTPException(status_code=409, detail=task["error"])
+            raise HTTPException(status_code=500, detail=task["error"])
+        
         logger.info(f"Successfully created monitoring task {task.get('task_id')}")
         return task
     except HTTPException:
@@ -721,9 +737,28 @@ def complete_task_v2(task_id: str, completed_by: str, notes: str = None):
     """Mark a task as completed (database-backed)"""
     try:
         logger.info(f"Marking task {task_id} as completed by {completed_by}")
+        
+        if not task_id:
+            logger.warning("Task ID is required")
+            raise HTTPException(status_code=400, detail="Task ID is required")
+        
+        if not completed_by:
+            logger.warning("completed_by parameter is required")
+            raise HTTPException(status_code=400, detail="completed_by parameter is required")
+        
         result = task_manager.update_task_status(task_id, "completed", notes, completed_by)
+        
+        # Handle database errors
+        if "error" in result:
+            logger.error(f"Database error: {result['error']}")
+            if "not found" in result.get("error", "").lower():
+                raise HTTPException(status_code=404, detail=result["error"])
+            raise HTTPException(status_code=500, detail=result["error"])
+        
         logger.info(f"Successfully completed task {task_id}")
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Task completion failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Task completion failed: {str(e)}")
@@ -733,9 +768,22 @@ def get_tasks_for_user_v2(assigned_to: str):
     """Get all tasks assigned to a user (database-backed)"""
     try:
         logger.info(f"Getting tasks assigned to {assigned_to}")
+        
+        if not assigned_to:
+            logger.warning("assigned_to parameter is required")
+            raise HTTPException(status_code=400, detail="assigned_to parameter is required")
+        
         tasks = task_manager.get_assigned_tasks(assigned_to)
+        
+        # Handle database errors
+        if "error" in tasks:
+            logger.error(f"Database error: {tasks['error']}")
+            raise HTTPException(status_code=500, detail=tasks["error"])
+        
         logger.info(f"Found {tasks.get('task_count', 0)} tasks")
         return tasks
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get tasks: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get tasks: {str(e)}")
@@ -745,9 +793,27 @@ def get_tasks_for_student_v2(student_id: str):
     """Get all tasks for a student (database-backed)"""
     try:
         logger.info(f"Getting tasks for student {student_id}")
+        
+        if not student_id:
+            logger.warning("Student ID is required")
+            raise HTTPException(status_code=400, detail="Student ID is required")
+        
+        valid, error = moderate_validator.validate_student_id(student_id)
+        if not valid:
+            logger.warning(f"Invalid student ID: {student_id} - {error}")
+            raise HTTPException(status_code=400, detail=f"Invalid student ID: {error}")
+        
         tasks = task_manager.get_student_tasks(student_id)
+        
+        # Handle database errors
+        if "error" in tasks:
+            logger.error(f"Database error: {tasks['error']}")
+            raise HTTPException(status_code=500, detail=tasks["error"])
+        
         logger.info(f"Found {tasks.get('task_count', 0)} tasks")
         return tasks
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get student tasks: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get student tasks: {str(e)}")
@@ -758,8 +824,16 @@ def get_overdue_tasks_list_v2():
     try:
         logger.info("Getting overdue tasks")
         tasks = task_manager.get_overdue_tasks()
+        
+        # Handle database errors
+        if "error" in tasks:
+            logger.error(f"Database error: {tasks['error']}")
+            raise HTTPException(status_code=500, detail=tasks["error"])
+        
         logger.info(f"Found {tasks.get('total_overdue', 0)} overdue tasks")
         return tasks
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get overdue tasks: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get overdue tasks: {str(e)}")
@@ -786,6 +860,14 @@ def assign_teacher_v2(student_id: str, teacher_id: str, subject: str, assigned_b
             raise HTTPException(status_code=400, detail="Subject is required")
         
         assignment = teacher_assignment_manager.assign_teacher_to_student(student_id, teacher_id, subject, assigned_by)
+        
+        # Handle database errors
+        if "error" in assignment:
+            logger.error(f"Database error: {assignment['error']}")
+            if "already exists" in assignment.get("error", "").lower():
+                raise HTTPException(status_code=409, detail=assignment["error"])
+            raise HTTPException(status_code=500, detail=assignment["error"])
+        
         logger.info(f"Successfully assigned teacher {teacher_id} to student {student_id}")
         return assignment
     except HTTPException:
@@ -799,9 +881,22 @@ def get_teacher_resp_v2(teacher_id: str):
     """Get all responsibilities for a teacher (database-backed)"""
     try:
         logger.info(f"Getting responsibilities for teacher {teacher_id}")
+        
+        if not teacher_id:
+            logger.warning("Teacher ID is required")
+            raise HTTPException(status_code=400, detail="Teacher ID is required")
+        
         responsibilities = teacher_assignment_manager.get_teacher_responsibilities(teacher_id)
+        
+        # Handle database errors
+        if "error" in responsibilities:
+            logger.error(f"Database error: {responsibilities['error']}")
+            raise HTTPException(status_code=500, detail=responsibilities["error"])
+        
         logger.info(f"Found {responsibilities.get('total_responsibilities', 0)} responsibilities")
         return responsibilities
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get responsibilities: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get responsibilities: {str(e)}")
