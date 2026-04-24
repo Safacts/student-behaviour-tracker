@@ -10,7 +10,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 import uvicorn
 import time
 import traceback
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from analyzer import analyze_student
 from llm_service import generate_parent_report
