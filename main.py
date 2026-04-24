@@ -3,6 +3,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+
+class ChatRequest(BaseModel):
+    query: str
+
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
@@ -54,6 +58,7 @@ from task_manager import task_manager, teacher_assignment_manager
 from validators import moderate_validator
 from auth import auth
 from rate_limiter import rate_limiter
+from agent_orchestrator import conversational_router
 import logging
 
 # Configure logging
@@ -958,6 +963,29 @@ def get_auth_stats():
     except Exception as e:
         logger.error(f"Failed to get auth stats: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get auth stats: {str(e)}")
+
+# Conversational API Endpoint
+
+@app.post("/api/chat")
+async def chat_endpoint(request: ChatRequest, current_user: str = Depends(verify_auth_token), request_obj: Request = None):
+    """Conversational API endpoint for natural language interaction with agents"""
+    try:
+        logger.info(f"User {current_user} sent query: {request.query}")
+        
+        if not request.query:
+            logger.warning("Query is required")
+            raise HTTPException(status_code=400, detail="Query is required")
+        
+        # Process the query through the conversational router
+        result = conversational_router.process_query(request.query)
+        
+        logger.info(f"Query processed successfully, tool used: {result.get('tool_used', 'none')}")
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Chat endpoint failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Chat endpoint failed: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
