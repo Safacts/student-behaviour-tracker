@@ -938,6 +938,57 @@ async def get_teacher_resp_v2(teacher_id: str, current_user: str = Depends(verif
 
 # Authentication Endpoints
 
+@app.post("/api/auth/login")
+def login_endpoint(username: str, password: str):
+    """Login with username and password"""
+    try:
+        logger.info(f"Login attempt for user: {username}")
+        result = auth.login(username, password)
+        
+        if result["success"]:
+            logger.info(f"Login successful for user: {username}")
+        else:
+            logger.warning(f"Login failed for user: {username} - {result['message']}")
+        
+        return result
+    except Exception as e:
+        logger.error(f"Login endpoint failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
+
+@app.post("/api/auth/register")
+def register_endpoint(username: str, password: str, role: str, name: str, email: str):
+    """Register a new user"""
+    try:
+        logger.info(f"Registration attempt for user: {username}")
+        result = auth.register_user(username, password, role, name, email)
+        
+        if result["success"]:
+            logger.info(f"Registration successful for user: {username}")
+        else:
+            logger.warning(f"Registration failed for user: {username} - {result['message']}")
+        
+        return result
+    except Exception as e:
+        logger.error(f"Registration endpoint failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
+@app.post("/api/auth/logout")
+def logout_endpoint(token: str):
+    """Logout user by revoking token"""
+    try:
+        logger.info("Logout attempt")
+        result = auth.logout(token)
+        
+        if result["success"]:
+            logger.info("Logout successful")
+        else:
+            logger.warning(f"Logout failed - {result['message']}")
+        
+        return result
+    except Exception as e:
+        logger.error(f"Logout endpoint failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Logout failed: {str(e)}")
+
 @app.get("/api/auth/token")
 def generate_token(user_id: str):
     """Generate an authentication token for testing (in production, use proper login)"""
