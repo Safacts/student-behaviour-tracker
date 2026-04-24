@@ -11,6 +11,9 @@ from llm_service import generate_parent_report
 from groq import Groq
 import os
 from dotenv import load_dotenv
+from task_manager import task_manager, teacher_assignment_manager
+from validators import moderate_validator
+from auth import auth
 
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
