@@ -40,7 +40,26 @@ class ToolRegistry:
             detect_anomalies,
             assign_teacher_to_student,
             get_teacher_responsibilities,
-            generate_teacher_report
+            generate_teacher_report,
+            get_student_info,
+            get_all_students,
+            get_student_activity_logs,
+            get_student_summary,
+            generate_pdf_report_content,
+            generate_meeting_agenda,
+            generate_calendar_event,
+            generate_recurring_schedule,
+            analyze_topic_performance,
+            analyze_chapter_performance,
+            generate_iit_prep_report,
+            export_student_data_to_csv,
+            export_class_data_to_csv,
+            generate_student_chart_data,
+            generate_class_chart_data,
+            generate_report_summary_text,
+            validate_student_data,
+            clean_student_data,
+            add_student_activity
         )
         
         # Register tools with natural language descriptions
@@ -168,6 +187,139 @@ class ToolRegistry:
             generate_teacher_report,
             "Generate a comprehensive report for a teacher about their assigned students.",
             {"teacher_id": "The ID of the teacher"}
+        )
+        
+        self.register_tool(
+            "get_student_info",
+            get_student_info,
+            "Get basic information about a student.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "get_all_students",
+            get_all_students,
+            "Get a list of all students in the system.",
+            {}
+        )
+        
+        self.register_tool(
+            "get_student_activity_logs",
+            get_student_activity_logs,
+            "Get activity logs for a student over a specified time period.",
+            {"student_id": "The ID of the student", "days": "Optional: Number of days of history (default: 7)"}
+        )
+        
+        self.register_tool(
+            "get_student_summary",
+            get_student_summary,
+            "Get a summary of a student's overall performance and behavior.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "generate_pdf_report_content",
+            generate_pdf_report_content,
+            "Generate content for a PDF report about a student.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "generate_meeting_agenda",
+            generate_meeting_agenda,
+            "Generate an agenda for a meeting (parent-teacher, staff, etc.).",
+            {"student_id": "The ID of the student", "meeting_type": "Type of meeting: parent_teacher, staff, etc."}
+        )
+        
+        self.register_tool(
+            "generate_calendar_event",
+            generate_calendar_event,
+            "Generate a calendar event for a student-related activity.",
+            {"student_id": "The ID of the student", "event_type": "Type of event: parent_meeting, etc."}
+        )
+        
+        self.register_tool(
+            "generate_recurring_schedule",
+            generate_recurring_schedule,
+            "Generate a recurring schedule for a student.",
+            {"student_id": "The ID of the student", "frequency": "Frequency: weekly, biweekly, monthly"}
+        )
+        
+        self.register_tool(
+            "analyze_topic_performance",
+            analyze_topic_performance,
+            "Analyze a student's performance by topic within subjects.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "analyze_chapter_performance",
+            analyze_chapter_performance,
+            "Analyze a student's performance by chapter within subjects.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "generate_iit_prep_report",
+            generate_iit_prep_report,
+            "Generate a specialized report for IIT-JEE preparation.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "export_student_data_to_csv",
+            export_student_data_to_csv,
+            "Export a student's data to CSV format.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "export_class_data_to_csv",
+            export_class_data_to_csv,
+            "Export the entire class data to CSV format.",
+            {}
+        )
+        
+        self.register_tool(
+            "generate_student_chart_data",
+            generate_student_chart_data,
+            "Generate chart data for visualizing student performance.",
+            {"student_id": "The ID of the student", "chart_type": "Type of chart: performance, marks, etc."}
+        )
+        
+        self.register_tool(
+            "generate_class_chart_data",
+            generate_class_chart_data,
+            "Generate chart data for visualizing class comparison.",
+            {"chart_type": "Type of chart: comparison, distribution, etc."}
+        )
+        
+        self.register_tool(
+            "generate_report_summary_text",
+            generate_report_summary_text,
+            "Generate a text summary of a student's report.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "validate_student_data",
+            validate_student_data,
+            "Validate a student's data for quality and completeness.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "clean_student_data",
+            clean_student_data,
+            "Clean and normalize a student's data.",
+            {"student_id": "The ID of the student"}
+        )
+        
+        self.register_tool(
+            "add_student_activity",
+            add_student_activity,
+            "Add a new activity log entry for a student.",
+            {"student_id": "The ID of the student", "student_name": "Name of the student", "date": "Date in YYYY-MM-DD format", "activity_type": "Type of activity", "subject": "Subject", "topic": "Topic", "chapter": "Chapter", "time_spent_mins": "Time spent in minutes", "marks_achieved_percent": "Marks percentage", "distraction_score": "Distraction score 0-10"}
         )
     
     def register_tool(self, name: str, func: Callable, description: str, parameters: Dict[str, str]):
