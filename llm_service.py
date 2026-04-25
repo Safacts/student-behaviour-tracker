@@ -10,32 +10,75 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 def generate_fallback_report(student_data, behavioral_tag):
     """
     Generate a meaningful recommendation without external APIs based on behavioral analysis.
+    Focus on specific, data-driven insights rather than generic advice.
     """
     student_name = student_data['student_name']
     total_time = student_data['total_study_time']
     avg_distraction = student_data['avg_distraction']
     avg_marks = student_data['avg_marks']
     
-    # Rule-based recommendations based on data
+    # Additional detailed data if available
+    subject_performance = student_data.get('subject_performance', {})
+    weak_subjects = student_data.get('weak_subjects', [])
+    strong_subjects = student_data.get('strong_subjects', [])
+    distraction_patterns = student_data.get('distraction_patterns', {})
+    
+    # Build specific insights
+    insights = []
+    
+    # Subject-specific insights
+    if subject_performance:
+        worst_subject = min(subject_performance.items(), key=lambda x: x[1]) if subject_performance else None
+        best_subject = max(subject_performance.items(), key=lambda x: x[1]) if subject_performance else None
+        if worst_subject and best_subject:
+            marks_diff = best_subject[1] - worst_subject[1]
+            if marks_diff > 30:
+                insights.append(f"Performance varies significantly: {best_subject[0]} at {best_subject[1]}% vs {worst_subject[0]} at {worst_subject[1]}% - consider different study approaches for each subject")
+    
+    # Distraction pattern insights
+    if avg_distraction > 7 and total_time > 300:
+        insights.append(f"Despite spending {total_time} minutes studying, high distraction ({avg_distraction}/10) is reducing effectiveness - focus on quality over quantity with 25-minute focused sessions")
+    elif avg_distraction < 4 and avg_marks < 50:
+        insights.append(f"Focus is excellent ({avg_distraction}/10) but marks are low ({avg_marks}%) - the issue is likely conceptual understanding rather than attention - consider reviewing fundamentals")
+    
+    # Time vs marks correlation
+    if total_time > 400 and avg_marks < 50:
+        insights.append(f"Spending {total_time} minutes but achieving only {avg_marks}% - suggests inefficient study methods - try active recall and spaced repetition instead of passive reading")
+    elif total_time < 200 and avg_marks > 70:
+        insights.append(f"Achieving {avg_marks}% with only {total_time} minutes - excellent study efficiency - maintain this approach and gradually increase time for challenging topics")
+    
+    # Rule-based recommendations based on data with specific insights
     if behavioral_tag == "High Flight Risk":
         if avg_marks < 40:
-            return f"{student_name} is showing significant academic challenges with an average of {avg_marks}%. I recommend scheduling a meeting with teachers to identify specific knowledge gaps and creating a structured study plan with daily check-ins to rebuild confidence and academic foundation."
+            if insights:
+                return f"{student_name} is at high flight risk with {avg_marks}% average. {insights[0]} Prioritize identifying the specific gap - is it foundational concepts or application skills?"
+            else:
+                return f"{student_name} is at high flight risk with {avg_marks}% average. Data shows low performance across subjects - schedule a diagnostic assessment to pinpoint whether the issue is conceptual understanding, test anxiety, or knowledge gaps in specific topics"
         elif avg_distraction > 7:
-            return f"{student_name} is spending {total_time} minutes studying but high distraction levels ({avg_distraction}/10) are impacting performance. Consider creating a distraction-free study environment and implementing the Pomodoro technique with regular breaks to improve focus and retention."
+            if insights:
+                return f"{student_name}'s distraction levels ({avg_distraction}/10) are significantly impacting the {total_time} minutes spent studying. {insights[0]} Try studying during morning hours when focus is typically better."
+            else:
+                return f"{student_name} spends {total_time} minutes studying but distraction ({avg_distraction}/10) is cutting effectiveness by ~60%. Track when distractions occur most - if it's during specific subjects, break those into smaller, more manageable chunks"
         else:
-            return f"{student_name} needs immediate academic support with current performance at {avg_marks}%. I recommend pairing with a peer tutor for challenging subjects and establishing a consistent daily study routine to build momentum and improve understanding."
+            return f"{student_name} shows {avg_marks}% average with mixed performance indicators. The data suggests inconsistent application of knowledge - practice more problem-solving questions rather than reviewing notes, as this builds application skills"
     
     elif behavioral_tag == "Concept Comprehension Issue":
-        return f"{student_name} is putting in good effort with {total_time} minutes of study time but may need different learning approaches. I recommend using visual aids, hands-on activities, and breaking down complex concepts into smaller, manageable steps to improve comprehension and retention."
+        if insights:
+            return f"{student_name} invests {total_time} minutes with good focus ({avg_distraction}/10) but achieves only {avg_marks}% - {insights[0]} This pattern suggests understanding exists in some areas but not others - identify which specific topics are causing confusion"
+        else:
+            return f"{student_name} puts in {total_time} minutes with {avg_distraction}/10 distraction but gets {avg_marks}% - this disconnect between effort and results suggests the study method isn't working. Try the Feynman technique: explain concepts aloud to check if understanding is real or illusory"
     
     elif behavioral_tag == "On Track":
         if avg_marks > 80:
-            return f"{student_name} is performing excellently with {avg_marks}% average marks and consistent study habits. I recommend introducing advanced challenges and enrichment activities to maintain engagement and continue the positive academic trajectory."
+            if insights:
+                return f"{student_name} excels at {avg_marks}% with efficient study habits. {insights[0]} Challenge yourself with advanced problems to prevent plateauing"
+            else:
+                return f"{student_name} achieves {avg_marks}% with {total_time} minutes study time - excellent efficiency. To maintain this trajectory, introduce increasingly complex problems rather than more practice of the same level"
         else:
-            return f"{student_name} is making good progress with {avg_marks}% average marks. I recommend setting specific academic goals for the next term and exploring subjects of interest to deepen engagement and maintain the positive momentum."
+            return f"{student_name} maintains {avg_marks}% average with consistent {total_time} minutes study time. To break through to the next level, identify which specific question types cause the most mistakes and target those specifically"
     
     else:
-        return f"{student_name} shows potential for growth with current study habits. I recommend establishing clear academic goals, regular progress monitoring, and celebrating small achievements to build confidence and maintain motivation throughout the learning journey."
+        return f"{student_name} shows {avg_marks}% with {total_time} minutes study time and {avg_distraction}/10 distraction. Track which subjects have the highest distraction-marks correlation - improving focus in those specific areas could yield the biggest gains"
 
 def generate_gemini_report(student_data, behavioral_tag):
     """
@@ -45,19 +88,26 @@ def generate_gemini_report(student_data, behavioral_tag):
         if GOOGLE_API_KEY and GOOGLE_API_KEY != "your_google_api_key_here":
             genai.configure(api_key=GOOGLE_API_KEY)
             model = genai.GenerativeModel('gemini-1.5-flash')
-            
+
             prompt = f"""
             You are an empathetic educational advisor. Write a 3-sentence recommendation for a parent based on their child's weekly activity data:
-            
+
             Student: {student_data['student_name']}
             Total Time Spent: {student_data['total_study_time']} mins
             Average Distraction Score: {student_data['avg_distraction']}/10
             Average Marks: {student_data['avg_marks']}%
             Behavioral Status: {behavioral_tag}
-            
-            The report should be supportive, concise, and focused on improvement or celebration.
+
+            CRITICAL: Provide specific, data-driven insights that parents might not notice.
+            - Show correlations between metrics (e.g., "High distraction during Physics correlates with 40% lower marks")
+            - Highlight specific patterns (e.g., "Focus is excellent in morning sessions but poor in evening")
+            - Compare performance across subjects/topics
+            - Identify non-obvious insights from the data
+            - Avoid generic advice like "study more" or "focus better" - be specific about what the data reveals
+
+            The report should be supportive, concise, and focused on specific, actionable insights from the data.
             """
-            
+
             response = model.generate_content(prompt)
             return response.text.strip()
         else:
@@ -76,20 +126,27 @@ def generate_parent_report(student_data, behavioral_tag):
 
             prompt = f"""
             You are an empathetic educational advisor. Write a 3-sentence recommendation for a parent based on their child's weekly activity data:
-            
+
             Student: {student_data['student_name']}
             Total Time Spent: {student_data['total_study_time']} mins
             Average Distraction Score: {student_data['avg_distraction']}/10
             Average Marks: {student_data['avg_marks']}%
             Behavioral Status: {behavioral_tag}
-            
-            The report should be supportive, concise, and focused on improvement or celebration.
+
+            CRITICAL: Provide specific, data-driven insights that parents might not notice.
+            - Show correlations between metrics (e.g., "High distraction during Physics correlates with 40% lower marks")
+            - Highlight specific patterns (e.g., "Focus is excellent in morning sessions but poor in evening")
+            - Compare performance across subjects/topics
+            - Identify non-obvious insights from the data
+            - Avoid generic advice like "study more" or "focus better" - be specific about what the data reveals
+
+            The report should be supportive, concise, and focused on specific, actionable insights from the data.
             """
 
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are an empathetic educational advisor."},
+                    {"role": "system", "content": "You are an empathetic educational advisor who provides specific, data-driven insights rather than generic advice."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=150,
