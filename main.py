@@ -1039,4 +1039,25 @@ async def chat_endpoint(request: ChatRequest, current_user: str = Depends(verify
         raise HTTPException(status_code=500, detail=f"Chat endpoint failed: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import ssl
+    import os
+    
+    # SSL Configuration
+    ssl_context = None
+    if os.getenv("ENABLE_SSL", "false").lower() == "true":
+        cert_file = os.getenv("SSL_CERT_FILE", "cert.pem")
+        key_file = os.getenv("SSL_KEY_FILE", "key.pem")
+        
+        if os.path.exists(cert_file) and os.path.exists(key_file):
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.load_cert_chain(certfile=cert_file, keyfile=key_file)
+            logger.info("SSL enabled - server will run on HTTPS")
+        else:
+            logger.warning(f"SSL certificates not found at {cert_file} and {key_file}. Running on HTTP.")
+    
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=8000,
+        ssl=ssl_context
+    )

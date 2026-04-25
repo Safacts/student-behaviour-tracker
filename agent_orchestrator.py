@@ -383,7 +383,7 @@ If no tool matches the query, set tool to null and explain why in reasoning.
         
         try:
             response = self.client.chat.completions.create(
-                model="llama3-70b-8192",
+                model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
                 response_format={"type": "json_object"}
@@ -543,7 +543,7 @@ Generate a natural, conversational response to the user. Be helpful and explain 
         
         try:
             response = self.client.chat.completions.create(
-                model="llama3-70b-8192",
+                model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7
             )
