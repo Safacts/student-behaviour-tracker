@@ -1,0 +1,828 @@
+[
+  {
+    "test_name": "Simple behavior analysis",
+    "query": "Analyze student S001",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "tool_used": "analyze_student_behavior",
+      "tool_description": "Analyze a student's behavioral patterns, study habits, and engagement. Returns insights about focus, distraction, and learning patterns.",
+      "result": {
+        "student_id": "S001",
+        "total_study_time": 1460,
+        "avg_distraction": 5.9,
+        "avg_marks": 45.5,
+        "behavioral_tag": "High Flight Risk",
+        "marks_trend": 8.0,
+        "recent_activities_count": 10
+      },
+      "natural_language_response": "I've analyzed student S001's behavior using our analysis tool. Here's what I found: S001 has spent a total of 1460 minutes studying, but tends to get distracted quite often, with an average of 5.9 distractions. Their average marks are 45.5, and unfortunately, their marks have been trending downward by 8%. The system has also flagged S001 as a \"High Flight Risk\", indicating that they might be at risk of disengaging from their studies. It's worth noting that they have been fairly active recently, with 10 activities logged. Would you like to discuss possible interventions to support S001?",
+      "confidence": 0.9,
+      "is_compound": false
+    },
+    "expected_tool": "analyze_student_behavior",
+    "expected_params": {
+      "student_id": "S001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T15:04:10.005010",
+    "tool_match": true
+  },
+  {
+    "test_name": "Class overview",
+    "query": "Get class overview",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "tool_used": "get_class_overview",
+      "tool_description": "Get an overview of the entire class including statistics and trends.",
+      "result": {
+        "total_students": 3,
+        "average_marks": 65.88,
+        "average_distraction": 2.95,
+        "behavioral_tag_distribution": {
+          "High Flight Risk": 1,
+          "Concept Comprehension Issue": 1,
+          "On Track": 1
+        },
+        "students_at_risk": 1,
+        "students_on_track": 1,
+        "students_with_comprehension_issues": 1
+      },
+      "natural_language_response": "The class overview tool has provided some interesting insights. It looks like there are 3 students in the class with an average mark of 65.88 and an average distraction level of 2.95. The class has a fairly even distribution of behavioral tags, with one student at high flight risk, one struggling with concept comprehension, and one who's on track. This suggests that the class has a mix of students who may need extra support and those who are doing well. Would you like to explore any of these areas further or get more detailed information about individual students?",
+      "confidence": 1.0,
+      "is_compound": false
+    },
+    "expected_tool": "get_class_overview",
+    "expected_params": {},
+    "type": "positive",
+    "timestamp": "2026-04-25T15:04:13.815472",
+    "tool_match": true
+  },
+  {
+    "test_name": "Create intervention with parameters",
+    "query": "Create intervention for student S001 assigned to teacher T001",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "is_compound": true,
+      "tools_used": [
+        "suggest_intervention",
+        "create_intervention_task"
+      ],
+      "results": [
+        {
+          "tool": "suggest_intervention",
+          "tool_description": "Suggest appropriate interventions for a student who may be struggling or at risk.",
+          "result": {
+            "urgency": "HIGH",
+            "intervention_type": "Immediate Support",
+            "actions": [
+              "Schedule immediate parent-teacher meeting",
+              "Implement daily check-in system",
+              "Reduce distractions in study environment",
+              "Consider peer tutoring program",
+              "Set short-term achievable goals"
+            ],
+            "timeline": "Within 1 week",
+            "success_metrics": [
+              "Increase average marks by 10% within 2 weeks",
+              "Reduce distraction score by 2 points",
+              "Improve daily study time consistency"
+            ],
+            "student_id": "S001",
+            "current_status": {
+              "avg_marks": 45.5,
+              "avg_distraction": 5.9,
+              "behavioral_tag": "High Flight Risk"
+            }
+          },
+          "success": true
+        },
+        {
+          "tool": "create_intervention_task",
+          "tool_description": "Create an intervention task for a student and assign it to a teacher.",
+          "result": {
+            "success": true,
+            "task": {
+              "task_id": "task_1_S001",
+              "student_id": "S001",
+              "task_type": "intervention",
+              "assigned_to": "T001",
+              "assigned_by": "system",
+              "assigned_date": "2026-04-25T15:04:16.568075",
+              "due_date": "2026-05-02T15:04:16.568075",
+              "status": "pending",
+              "priority": "HIGH",
+              "actions": [
+                "Schedule immediate parent-teacher meeting",
+                "Implement daily check-in system",
+                "Reduce distractions in study environment",
+                "Consider peer tutoring program",
+                "Set short-term achievable goals"
+              ],
+              "success_metrics": [
+                "Increase average marks by 10% within 2 weeks",
+                "Reduce distraction score by 2 points",
+                "Improve daily study time consistency"
+              ],
+              "notes": "Implement intervention for student with Unknown status"
+            },
+            "message": "Task created successfully"
+          },
+          "success": true
+        }
+      ],
+      "errors": [],
+      "natural_language_response": "To create an intervention for student S001 assigned to teacher T001, we utilized two key tools: suggest_intervention and create_intervention_task. \n\nThe suggest_intervention tool analyzed the student's current status and provided a comprehensive plan. It identified a high urgency for intervention, recommending an \"Immediate Support\" type intervention. This includes actions such as scheduling a parent-teacher meeting, implementing a daily check-in system, reducing distractions, considering peer tutoring, and setting short-term goals. The tool also outlined a timeline for these actions to be completed within one week and defined success metrics, including increasing average marks by 10% and reducing distraction scores.\n\nThe create_intervention_task tool then took this plan and turned it into a concrete task. It successfully created a new task, \"task_1_S001\", which is assigned to teacher T001 with a high priority and a due date of May 2, 2026. This task encapsulates all the recommended actions and success metrics from the suggest_intervention tool, ensuring that teacher T001 has a clear, actionable plan to support student S001.\n\nIn summary, our analysis indicates that student S001 is at a high flight risk with current average marks of 45.5 and an average distraction score of 5.9. To address this, we've created a high-priority task for teacher T001 to implement immediate support measures. By following the outlined actions and monitoring the defined success metrics, we aim to see significant improvements in the student's academic performance and behavioral consistency within the next couple of weeks.",
+      "confidence": 0.9
+    },
+    "expected_tool": "create_intervention_task",
+    "expected_params": {
+      "student_id": "S001",
+      "assigned_to": "T001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T15:04:17.898461",
+    "tool_match": false
+  },
+  {
+    "test_name": "Learning path creation",
+    "query": "Create learning path for student S002",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "tool_used": "create_learning_path",
+      "tool_description": "Create a personalized learning path for a student based on their current performance and goals.",
+      "result": {
+        "level": "Concept Mastery",
+        "duration": "3-4 weeks",
+        "milestones": [
+          {
+            "week": 1,
+            "focus": "Diagnosis",
+            "objectives": [
+              "Identify specific comprehension gaps",
+              "Assess learning style",
+              "Choose appropriate materials"
+            ],
+            "resources": [
+              "Learning style assessment",
+              "Diagnostic tests"
+            ]
+          },
+          {
+            "week": 2,
+            "focus": "Alternative Approaches",
+            "objectives": [
+              "Try different teaching methods",
+              "Use visual and interactive materials",
+              "Practice with real-world examples"
+            ],
+            "resources": [
+              "Visual learning tools",
+              "Real-world examples"
+            ]
+          },
+          {
+            "week": 3,
+            "focus": "Reinforcement",
+            "objectives": [
+              "Practice with varied problems",
+              "Teach concepts to others",
+              "Apply concepts in projects"
+            ],
+            "resources": [
+              "Practice problems",
+              "Project ideas"
+            ]
+          }
+        ],
+        "student_id": "S002",
+        "starting_point": {
+          "avg_marks": 59.75,
+          "behavioral_tag": "Concept Comprehension Issue"
+        }
+      },
+      "natural_language_response": "I've created a personalized learning path for student S002. Based on their current performance, which shows an average mark of 59.75 and a concept comprehension issue, the system recommends a 3-4 week \"Concept Mastery\" path. \n\nThe path is divided into three milestones: \n1. Week 1 will focus on diagnosis, identifying comprehension gaps, and choosing appropriate materials.\n2. Week 2 will explore alternative approaches, including different teaching methods and interactive materials.\n3. Week 3 will reinforce learning with practice problems, teaching concepts to others, and applying them in projects.\n\nThis tailored approach should help student S002 address their comprehension gaps and improve their understanding of the concepts.",
+      "confidence": 0.9,
+      "is_compound": false
+    },
+    "expected_tool": "create_learning_path",
+    "expected_params": {
+      "student_id": "S002"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T15:04:21.125710",
+    "tool_match": true
+  },
+  {
+    "test_name": "Identify at-risk students",
+    "query": "Show me at-risk students",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "tool_used": "identify_at_risk_students",
+      "tool_description": "Identify all students who are at risk based on their performance metrics.",
+      "result": [
+        {
+          "student_id": "S001",
+          "student_name": "Alex",
+          "avg_marks": 45.5,
+          "avg_distraction": 5.9,
+          "behavioral_tag": "High Flight Risk"
+        }
+      ],
+      "natural_language_response": "The identify_at_risk_students tool has identified one student who is currently at risk. The student, Alex (ID: S001), has an average mark of 45.5 and an average distraction level of 5.9, which has flagged them with a \"High Flight Risk\" behavioral tag. This suggests that Alex may need additional support to get back on track. Would you like to explore ways to provide extra help or monitor their progress?",
+      "confidence": 0.9,
+      "is_compound": false
+    },
+    "expected_tool": "identify_at_risk_students",
+    "expected_params": {},
+    "type": "positive",
+    "timestamp": "2026-04-25T15:04:24.197245",
+    "tool_match": true
+  },
+  {
+    "test_name": "Student summary",
+    "query": "Get summary for student S001",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "tool_used": "get_student_summary",
+      "tool_description": "Get a summary of a student's overall performance and behavior.",
+      "result": {
+        "student_info": {
+          "student_id": "S001",
+          "student_name": "Alex"
+        },
+        "analysis": {
+          "student_id": "S001",
+          "total_study_time": 1460,
+          "avg_distraction": 5.9,
+          "avg_marks": 45.5,
+          "behavioral_tag": "High Flight Risk",
+          "marks_trend": 8.0,
+          "recent_activities_count": 10
+        },
+        "recent_activities": [
+          {
+            "id": 82,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-23",
+            "time_spent_mins": 51,
+            "distraction_score": 9,
+            "marks_achieved_percent": 47.0
+          },
+          {
+            "id": 83,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-23",
+            "time_spent_mins": 94,
+            "distraction_score": 9,
+            "marks_achieved_percent": 0.0
+          },
+          {
+            "id": 84,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-23",
+            "time_spent_mins": 25,
+            "distraction_score": 8,
+            "marks_achieved_percent": 34.0
+          },
+          {
+            "id": 85,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-23",
+            "time_spent_mins": 43,
+            "distraction_score": 3,
+            "marks_achieved_percent": 75.0
+          },
+          {
+            "id": 86,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-23",
+            "time_spent_mins": 40,
+            "distraction_score": 1,
+            "marks_achieved_percent": 91.0
+          },
+          {
+            "id": 69,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-22",
+            "time_spent_mins": 46,
+            "distraction_score": 7,
+            "marks_achieved_percent": 20.0
+          },
+          {
+            "id": 70,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-22",
+            "time_spent_mins": 44,
+            "distraction_score": 3,
+            "marks_achieved_percent": 55.0
+          },
+          {
+            "id": 71,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-22",
+            "time_spent_mins": 57,
+            "distraction_score": 7,
+            "marks_achieved_percent": 41.0
+          },
+          {
+            "id": 58,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-21",
+            "time_spent_mins": 53,
+            "distraction_score": 9,
+            "marks_achieved_percent": 20.0
+          },
+          {
+            "id": 59,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-21",
+            "time_spent_mins": 43,
+            "distraction_score": 10,
+            "marks_achieved_percent": 39.0
+          },
+          {
+            "id": 60,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-21",
+            "time_spent_mins": 34,
+            "distraction_score": 5,
+            "marks_achieved_percent": 82.0
+          },
+          {
+            "id": 61,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-21",
+            "time_spent_mins": 40,
+            "distraction_score": 1,
+            "marks_achieved_percent": 82.0
+          },
+          {
+            "id": 47,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-20",
+            "time_spent_mins": 88,
+            "distraction_score": 10,
+            "marks_achieved_percent": 0.0
+          },
+          {
+            "id": 48,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-20",
+            "time_spent_mins": 23,
+            "distraction_score": 2,
+            "marks_achieved_percent": 52.0
+          },
+          {
+            "id": 49,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-20",
+            "time_spent_mins": 43,
+            "distraction_score": 4,
+            "marks_achieved_percent": 62.0
+          },
+          {
+            "id": 34,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-19",
+            "time_spent_mins": 42,
+            "distraction_score": 8,
+            "marks_achieved_percent": 49.0
+          },
+          {
+            "id": 35,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-19",
+            "time_spent_mins": 117,
+            "distraction_score": 10,
+            "marks_achieved_percent": 0.0
+          },
+          {
+            "id": 36,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-19",
+            "time_spent_mins": 25,
+            "distraction_score": 5,
+            "marks_achieved_percent": 54.0
+          },
+          {
+            "id": 37,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-19",
+            "time_spent_mins": 31,
+            "distraction_score": 5,
+            "marks_achieved_percent": 51.0
+          },
+          {
+            "id": 38,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-19",
+            "time_spent_mins": 27,
+            "distraction_score": 3,
+            "marks_achieved_percent": 81.0
+          },
+          {
+            "id": 23,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-18",
+            "time_spent_mins": 24,
+            "distraction_score": 2,
+            "marks_achieved_percent": 88.0
+          },
+          {
+            "id": 24,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-18",
+            "time_spent_mins": 23,
+            "distraction_score": 5,
+            "marks_achieved_percent": 58.0
+          },
+          {
+            "id": 25,
+            "student_id": "S001",
+            "student_name": "Alex",
+            "date": "2026-04-18",
+            "time_spent_mins": 50,
+            "distraction_score": 5,
+            "marks_achieved_percent": 69.0
+          }
+        ],
+        "ai_recommendation": {
+          "student_id": "S001",
+          "student_name": "Alex",
+          "analysis": {
+            "student_id": "S001",
+            "total_study_time": 1460,
+            "avg_distraction": 5.9,
+            "avg_marks": 45.5,
+            "behavioral_tag": "High Flight Risk",
+            "student_name": "Alex"
+          },
+          "ai_recommendation": "Alex needs immediate academic support with current performance at 45.5%. I recommend pairing with a peer tutor for challenging subjects and establishing a consistent daily study routine to build momentum and improve understanding."
+        },
+        "intervention_suggestion": {
+          "urgency": "HIGH",
+          "intervention_type": "Immediate Support",
+          "actions": [
+            "Schedule immediate parent-teacher meeting",
+            "Implement daily check-in system",
+            "Reduce distractions in study environment",
+            "Consider peer tutoring program",
+            "Set short-term achievable goals"
+          ],
+          "timeline": "Within 1 week",
+          "success_metrics": [
+            "Increase average marks by 10% within 2 weeks",
+            "Reduce distraction score by 2 points",
+            "Improve daily study time consistency"
+          ],
+          "student_id": "S001",
+          "current_status": {
+            "avg_marks": 45.5,
+            "avg_distraction": 5.9,
+            "behavioral_tag": "High Flight Risk"
+          }
+        },
+        "learning_path": {
+          "level": "Foundation Building",
+          "duration": "4-6 weeks",
+          "milestones": [
+            {
+              "week": 1,
+              "focus": "Study Habits & Routine",
+              "objectives": [
+                "Establish consistent study schedule",
+                "Create distraction-free study environment",
+                "Set daily study time goals"
+              ],
+              "resources": [
+                "Study planner template",
+                "Focus techniques guide"
+              ]
+            },
+            {
+              "week": 2,
+              "focus": "Basic Concept Review",
+              "objectives": [
+                "Review fundamental concepts",
+                "Complete practice exercises",
+                "Identify knowledge gaps"
+              ],
+              "resources": [
+                "Concept review videos",
+                "Practice worksheets"
+              ]
+            },
+            {
+              "week": 3,
+              "focus": "Skill Building",
+              "objectives": [
+                "Practice problem-solving",
+                "Build confidence in weak areas",
+                "Track progress daily"
+              ],
+              "resources": [
+                "Interactive exercises",
+                "Progress tracking tools"
+              ]
+            },
+            {
+              "week": 4,
+              "focus": "Assessment & Adjustment",
+              "objectives": [
+                "Complete assessment tests",
+                "Review progress",
+                "Adjust learning strategy"
+              ],
+              "resources": [
+                "Assessment tools",
+                "Progress reports"
+              ]
+            }
+          ],
+          "student_id": "S001",
+          "starting_point": {
+            "avg_marks": 45.5,
+            "behavioral_tag": "High Flight Risk"
+          }
+        }
+      },
+      "natural_language_response": "The get_student_summary tool has provided a comprehensive overview of student S001, Alex. The analysis shows that Alex has a total study time of 1460 minutes, with an average distraction score of 5.9 and average marks of 45.5%. The system has flagged Alex as a \"High Flight Risk\" due to their current performance.\n\nThe AI recommendation suggests that Alex needs immediate academic support, recommending a peer tutor for challenging subjects and a consistent daily study routine. The intervention suggestion also indicates a high level of urgency, recommending actions such as a parent-teacher meeting, daily check-ins, and reducing distractions in the study environment.\n\nA personalized learning path has been outlined, focusing on foundation building over 4-6 weeks, with milestones and objectives to help Alex establish good study habits, review basic concepts, build skills, and adjust their learning strategy. I hope this information helps you support Alex in their academic journey.",
+      "confidence": 0.9,
+      "is_compound": false
+    },
+    "expected_tool": "get_student_summary",
+    "expected_params": {
+      "student_id": "S001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T15:04:33.002545",
+    "tool_match": true
+  },
+  {
+    "test_name": "Compound query (negative test)",
+    "query": "Analyze student S001 and create a learning path",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "is_compound": true,
+      "tools_used": [
+        "analyze_student_behavior",
+        "create_learning_path"
+      ],
+      "results": [
+        {
+          "tool": "analyze_student_behavior",
+          "tool_description": "Analyze a student's behavioral patterns, study habits, and engagement. Returns insights about focus, distraction, and learning patterns.",
+          "result": {
+            "student_id": "S001",
+            "total_study_time": 1460,
+            "avg_distraction": 5.9,
+            "avg_marks": 45.5,
+            "behavioral_tag": "High Flight Risk",
+            "marks_trend": 8.0,
+            "recent_activities_count": 10
+          },
+          "success": true
+        },
+        {
+          "tool": "create_learning_path",
+          "tool_description": "Create a personalized learning path for a student based on their current performance and goals.",
+          "result": {
+            "level": "Foundation Building",
+            "duration": "4-6 weeks",
+            "milestones": [
+              {
+                "week": 1,
+                "focus": "Study Habits & Routine",
+                "objectives": [
+                  "Establish consistent study schedule",
+                  "Create distraction-free study environment",
+                  "Set daily study time goals"
+                ],
+                "resources": [
+                  "Study planner template",
+                  "Focus techniques guide"
+                ]
+              },
+              {
+                "week": 2,
+                "focus": "Basic Concept Review",
+                "objectives": [
+                  "Review fundamental concepts",
+                  "Complete practice exercises",
+                  "Identify knowledge gaps"
+                ],
+                "resources": [
+                  "Concept review videos",
+                  "Practice worksheets"
+                ]
+              },
+              {
+                "week": 3,
+                "focus": "Skill Building",
+                "objectives": [
+                  "Practice problem-solving",
+                  "Build confidence in weak areas",
+                  "Track progress daily"
+                ],
+                "resources": [
+                  "Interactive exercises",
+                  "Progress tracking tools"
+                ]
+              },
+              {
+                "week": 4,
+                "focus": "Assessment & Adjustment",
+                "objectives": [
+                  "Complete assessment tests",
+                  "Review progress",
+                  "Adjust learning strategy"
+                ],
+                "resources": [
+                  "Assessment tools",
+                  "Progress reports"
+                ]
+              }
+            ],
+            "student_id": "S001",
+            "starting_point": {
+              "avg_marks": 45.5,
+              "behavioral_tag": "High Flight Risk"
+            }
+          },
+          "success": true
+        }
+      ],
+      "errors": [],
+      "natural_language_response": "To create a personalized learning path for student S001, we analyzed their behavior and academic performance using two specialized tools: `analyze_student_behavior` and `create_learning_path`.\n\nThe `analyze_student_behavior` tool provided valuable insights into S001's study habits and performance. It found that S001 has spent a total of 1460 minutes studying, with an average distraction rate of 5.9, and currently holds an average mark of 45.5. Unfortunately, their marks trend indicates a slight decline, with an increase of only 8.0. The tool also identified S001 as having a \"High Flight Risk\" behavioral tag, suggesting that they might be at risk of disengaging from their studies. Recently, S001 has been somewhat active, completing 10 activities.\n\nUsing these findings, the `create_learning_path` tool designed a tailored learning plan for S001. The plan, set at the \"Foundation Building\" level, is designed to last between 4-6 weeks. It outlines specific milestones and objectives for each week, focusing on areas such as establishing consistent study habits, reviewing basic concepts, building skills, and assessing progress. The plan includes resources like study planner templates, concept review videos, and interactive exercises to support S001's learning journey.\n\nOverall, our analysis and learning path creation provide a comprehensive approach to addressing S001's academic challenges. By acknowledging their current performance and behavioral risks, we can help S001 establish a strong foundation, build confidence, and develop better study habits. The structured 4-6 week plan offers a clear roadmap for improvement, with regular assessments and adjustments to ensure S001 stays on track and achieves their academic goals.",
+      "confidence": 0.9
+    },
+    "expected_tool": null,
+    "expected_params": {},
+    "type": "negative",
+    "timestamp": "2026-04-25T15:04:37.400827",
+    "tool_match": null
+  },
+  {
+    "test_name": "Missing student ID",
+    "query": "Analyze student",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": false,
+      "message": "Error executing tool: analyze_student_behavior() missing 1 required positional argument: 'student_id'",
+      "tool_used": "analyze_student_behavior"
+    },
+    "expected_tool": "analyze_student_behavior",
+    "expected_params": {
+      "student_id": null
+    },
+    "type": "edge_case",
+    "timestamp": "2026-04-25T15:04:46.326049",
+    "tool_match": true
+  },
+  {
+    "test_name": "Invalid student ID format",
+    "query": "Analyze student XYZ",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "tool_used": "analyze_student_behavior",
+      "tool_description": "Analyze a student's behavioral patterns, study habits, and engagement. Returns insights about focus, distraction, and learning patterns.",
+      "result": {
+        "error": "Student not found or no data available"
+      },
+      "natural_language_response": "It looks like the tool couldn't find any data for student XYZ. This might mean that the student doesn't have any recorded behavior or activity in the system, or they might not be enrolled in the program. If you'd like, I can help you check if the student is enrolled or if there's any other way to get the information you need.",
+      "confidence": 0.9,
+      "is_compound": false
+    },
+    "expected_tool": "analyze_student_behavior",
+    "expected_params": {
+      "student_id": null
+    },
+    "type": "edge_case",
+    "timestamp": "2026-04-25T15:04:56.052280",
+    "tool_match": true
+  },
+  {
+    "test_name": "Predict performance",
+    "query": "Predict performance for student S001",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "tool_used": "predict_student_performance",
+      "tool_description": "Predict a student's future performance based on historical data.",
+      "result": {
+        "success": true,
+        "student_id": "S001",
+        "prediction_period_days": 30,
+        "current_performance": {
+          "avg_marks": 56.875,
+          "avg_distraction": 5.9
+        },
+        "predicted_performance": {
+          "avg_marks": 29.375,
+          "avg_distraction": 5.9
+        },
+        "trends": {
+          "marks_trend": -0.9166666666666666,
+          "distraction_trend": 0.0
+        },
+        "risk_level": "Critical",
+        "confidence_score": 0,
+        "recommendations": [
+          "Marks are slowly declining - monitor closely",
+          "Schedule parent meeting and implement intervention plan"
+        ],
+        "prediction_date": "2026-05-25"
+      },
+      "natural_language_response": "The predict_student_performance tool has analyzed the historical data for student S001 and made some predictions. Currently, S001 has an average mark of 56.875 and an average distraction level of 5.9. However, the tool predicts that over the next 30 days, their average marks will drop to 29.375, while their distraction level remains steady. This indicates a declining trend in marks, which is a concern. The tool has flagged the risk level as \"Critical\" and suggests monitoring the situation closely, scheduling a parent meeting, and implementing an intervention plan to address the decline. It's essential to take these recommendations seriously to support S001 in getting back on track.",
+      "confidence": 0.9,
+      "is_compound": false
+    },
+    "expected_tool": "predict_student_performance",
+    "expected_params": {
+      "student_id": "S001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T15:05:06.070825",
+    "tool_match": true
+  },
+  {
+    "test_name": "Get student info",
+    "query": "Get information about student S001",
+    "status_code": 200,
+    "success": true,
+    "response": {
+      "success": true,
+      "tool_used": "get_student_info",
+      "tool_description": "Get basic information about a student.",
+      "result": {
+        "student_id": "S001",
+        "student_name": "Alex"
+      },
+      "natural_language_response": "I've retrieved the information about student S001 using our system. According to the records, the student with ID S001 is named Alex. If you need more details or specific information about Alex, feel free to let me know and I'll be happy to help with that.",
+      "confidence": 0.9,
+      "is_compound": false
+    },
+    "expected_tool": "get_student_info",
+    "expected_params": {
+      "student_id": "S001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T15:05:14.420091",
+    "tool_match": true
+  },
+  {
+    "test_name": "Activity logs",
+    "query": "Show activity logs for student S001 for the last 7 days",
+    "status_code": null,
+    "success": false,
+    "response": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=10)",
+    "expected_tool": "get_student_activity_logs",
+    "expected_params": {
+      "student_id": "S001",
+      "days": 7
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T15:05:26.471252",
+    "tool_match": null
+  }
+]

@@ -39,6 +39,7 @@
                     <a href="/agents" class="text-slate-500 hover:text-indigo-600 transition-colors">Agents</a>
                     <a href="/monitor" class="text-slate-500 hover:text-indigo-600 transition-colors">Monitor</a>
                     <a href="/docs" class="text-slate-500 hover:text-indigo-600 transition-colors">Integration</a>
+                    <a href="/chat" class="text-slate-500 hover:text-indigo-600 transition-colors">Chat</a>
                 </nav>
             </div>
         </div>
@@ -491,7 +492,8 @@
                     showError('Failed to analyze student');
                 }
             } catch (err) {
-                showError('Error analyzing student');
+                console.error("Error analyzing student:", err);
+                showError(`Error analyzing student: ${err.message || 'Unknown error'}`);
             } finally {
                 btn.textContent = 'Analyze Student';
                 btn.disabled = false;

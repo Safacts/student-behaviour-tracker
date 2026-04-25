@@ -1,0 +1,166 @@
+[
+  {
+    "test_name": "Simple behavior analysis",
+    "query": "Analyze student S001",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "analyze_student_behavior",
+    "expected_params": {
+      "student_id": "S001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T14:53:57.632973",
+    "tool_match": null
+  },
+  {
+    "test_name": "Class overview",
+    "query": "Get class overview",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "get_class_overview",
+    "expected_params": {},
+    "type": "positive",
+    "timestamp": "2026-04-25T14:53:59.687789",
+    "tool_match": null
+  },
+  {
+    "test_name": "Create intervention with parameters",
+    "query": "Create intervention for student S001 assigned to teacher T001",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "create_intervention_task",
+    "expected_params": {
+      "student_id": "S001",
+      "assigned_to": "T001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T14:54:01.758026",
+    "tool_match": null
+  },
+  {
+    "test_name": "Learning path creation",
+    "query": "Create learning path for student S002",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "create_learning_path",
+    "expected_params": {
+      "student_id": "S002"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T14:54:03.816777",
+    "tool_match": null
+  },
+  {
+    "test_name": "Identify at-risk students",
+    "query": "Show me at-risk students",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "identify_at_risk_students",
+    "expected_params": {},
+    "type": "positive",
+    "timestamp": "2026-04-25T14:54:05.880103",
+    "tool_match": null
+  },
+  {
+    "test_name": "Student summary",
+    "query": "Get summary for student S001",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "get_student_summary",
+    "expected_params": {
+      "student_id": "S001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T14:54:07.931785",
+    "tool_match": null
+  },
+  {
+    "test_name": "Compound query (negative test)",
+    "query": "Analyze student S001 and create a learning path",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": null,
+    "expected_params": {},
+    "type": "negative",
+    "timestamp": "2026-04-25T14:54:09.995118",
+    "tool_match": null
+  },
+  {
+    "test_name": "Missing student ID",
+    "query": "Analyze student",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "analyze_student_behavior",
+    "expected_params": {
+      "student_id": null
+    },
+    "type": "edge_case",
+    "timestamp": "2026-04-25T14:54:12.053512",
+    "tool_match": null
+  },
+  {
+    "test_name": "Invalid student ID format",
+    "query": "Analyze student XYZ",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "analyze_student_behavior",
+    "expected_params": {
+      "student_id": null
+    },
+    "type": "edge_case",
+    "timestamp": "2026-04-25T14:54:14.145963",
+    "tool_match": null
+  },
+  {
+    "test_name": "Predict performance",
+    "query": "Predict performance for student S001",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "predict_student_performance",
+    "expected_params": {
+      "student_id": "S001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T14:54:16.210498",
+    "tool_match": null
+  },
+  {
+    "test_name": "Get student info",
+    "query": "Get information about student S001",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "get_student_info",
+    "expected_params": {
+      "student_id": "S001"
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T14:54:18.281046",
+    "tool_match": null
+  },
+  {
+    "test_name": "Activity logs",
+    "query": "Show activity logs for student S001 for the last 7 days",
+    "status_code": 401,
+    "success": false,
+    "response": "{\"detail\":\"Invalid or expired token\"}",
+    "expected_tool": "get_student_activity_logs",
+    "expected_params": {
+      "student_id": "S001",
+      "days": 7
+    },
+    "type": "positive",
+    "timestamp": "2026-04-25T14:54:20.346958",
+    "tool_match": null
+  }
+]

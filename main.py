@@ -7,6 +7,7 @@ import sqlite3
 
 class ChatRequest(BaseModel):
     query: str
+    use_llm: bool = True
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -692,6 +693,14 @@ def read_monitor():
 def read_monitor_html():
     return FileResponse("monitor.html")
 
+@app.get("/chat")
+def read_chat():
+    return FileResponse("chat.html")
+
+@app.get("/chat.html")
+def read_chat_html():
+    return FileResponse("chat.html")
+
 @app.get("/agents")
 def read_agents():
     return FileResponse("agents.html")
@@ -1031,7 +1040,7 @@ async def chat_endpoint(request: ChatRequest, current_user: str = Depends(verify
             raise HTTPException(status_code=400, detail="Query is required")
         
         # Process the query through the conversational router
-        result = conversational_router.process_query(request.query)
+        result = conversational_router.process_query(request.query, request.use_llm)
         
         logger.info(f"Query processed successfully, tool used: {result.get('tool_used', 'none')}")
         return result

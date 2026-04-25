@@ -354,16 +354,26 @@ class IntentParser:
         self.tool_registry = tool_registry
         self.client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
     
-    def parse_query(self, query: str) -> Dict[str, Any]:
+    def parse_query(self, query: str, use_llm: bool = True) -> Dict[str, Any]:
         """Parse a natural language query to extract intent and parameters"""
-        if not self.client:
-            # Fallback to simple pattern matching if no LLM available
+        # Handle greetings first (before LLM call)
+        greetings = ["hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening"]
+        if any(greeting in query.lower() for greeting in greetings):
+            return {
+                "tools": [],
+                "is_compound": False,
+                "confidence": 1.0,
+                "is_greeting": True
+            }
+        
+        if not self.client or not use_llm:
+            # Fallback to simple pattern matching if no LLM available or heuristic mode requested
             return self._simple_parse(query)
         
         tool_descriptions = self.tool_registry.get_tool_descriptions()
         
         prompt = f"""
-You are an intent parser for a student behavior analysis system. Analyze the user's query and determine which tool to call and what parameters to extract.
+You are an intent parser for a student behavior analysis system. Analyze the user's query and determine which tool(s) to call and what parameters to extract.
 
 Available tools:
 {tool_descriptions}
@@ -372,15 +382,24 @@ User query: "{query}"
 
 Respond in JSON format with this structure:
 {{
-    "tool": "tool_name or null if no tool matches",
-    "parameters": {{"param_name": "value or null if not provided"}},
-    "confidence": 0.0 to 1.0,
-    "reasoning": "brief explanation of why this tool was chosen"
+    "tools": [
+        {{
+            "tool": "tool_name",
+            "parameters": {{"param_name": "value or null if not provided"}},
+            "reasoning": "brief explanation of why this tool was chosen"
+        }}
+    ],
+    "is_compound": true/false,
+    "confidence": 0.0 to 1.0
 }}
 
-If no tool matches the query, set tool to null and explain why in reasoning.
+IMPORTANT:
+- If the query contains multiple actions (e.g., "analyze student AND create learning path"), return multiple tools in the tools array
+- If the query contains a single action, return one tool in the tools array
+- Set is_compound to true if multiple tools are needed, false otherwise
+- If no tool matches, return an empty tools array
 """
-        
+
         try:
             response = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
@@ -390,6 +409,21 @@ If no tool matches the query, set tool to null and explain why in reasoning.
             )
             
             result = json.loads(response.choices[0].message.content)
+            print(f"DEBUG: LLM returned for query '{query}': {json.dumps(result, indent=2)}")
+            
+            # Backward compatibility: if old format, convert to new format
+            if "tool" in result and "tools" not in result:
+                result["tools"] = [{
+                    "tool": result.get("tool"),
+                    "parameters": result.get("parameters", {}),
+                    "reasoning": result.get("reasoning", "")
+                }]
+                result["is_compound"] = False
+                del result["tool"]
+                del result["parameters"]
+                del result["reasoning"]
+                print(f"DEBUG: Converted old format to new format: {json.dumps(result, indent=2)}")
+            
             return result
         except Exception as e:
             print(f"LLM parsing failed: {e}, falling back to simple parse")
@@ -398,6 +432,16 @@ If no tool matches the query, set tool to null and explain why in reasoning.
     def _simple_parse(self, query: str) -> Dict[str, Any]:
         """Simple pattern-based parsing as fallback"""
         query_lower = query.lower()
+        
+        # Handle greetings
+        greetings = ["hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening"]
+        if any(greeting in query_lower for greeting in greetings):
+            return {
+                "tools": [],
+                "is_compound": False,
+                "confidence": 1.0,
+                "is_greeting": True
+            }
         
         # Extract student ID
         student_id = None
@@ -411,63 +455,67 @@ If no tool matches the query, set tool to null and explain why in reasoning.
         if teacher_match:
             teacher_id = teacher_match.group(1).upper()
         
+        # Detect compound queries (simple heuristic)
+        compound_keywords = [" and ", " then ", " also ", " plus ", " followed by "]
+        is_compound = any(keyword in query_lower for keyword in compound_keywords)
+        
         # Simple intent matching
         if "analyze" in query_lower or "behavior" in query_lower:
-            return {
+            tools = [{
                 "tool": "analyze_student_behavior",
                 "parameters": {"student_id": student_id},
-                "confidence": 0.7,
                 "reasoning": "Query mentions analysis or behavior"
-            }
+            }]
         elif "intervention" in query_lower and "create" in query_lower:
-            return {
+            tools = [{
                 "tool": "create_intervention_task",
                 "parameters": {"student_id": student_id, "assigned_to": teacher_id},
-                "confidence": 0.7,
                 "reasoning": "Query mentions creating intervention"
-            }
+            }]
         elif "task" in query_lower and "assign" in query_lower:
-            return {
+            tools = [{
                 "tool": "create_intervention_task",
                 "parameters": {"student_id": student_id, "assigned_to": teacher_id},
-                "confidence": 0.6,
                 "reasoning": "Query mentions task assignment"
-            }
+            }]
         elif "at risk" in query_lower or "risk" in query_lower:
-            return {
+            tools = [{
                 "tool": "identify_at_risk_students",
                 "parameters": {},
-                "confidence": 0.8,
                 "reasoning": "Query mentions at-risk students"
-            }
+            }]
         elif "class" in query_lower or "overview" in query_lower:
-            return {
+            tools = [{
                 "tool": "get_class_overview",
                 "parameters": {},
-                "confidence": 0.7,
                 "reasoning": "Query mentions class overview"
-            }
-        elif "learning path" in query_lower:
-            return {
-                "tool": "create_learning_path",
-                "parameters": {"student_id": student_id},
-                "confidence": 0.7,
-                "reasoning": "Query mentions learning path"
-            }
-        elif "predict" in query_lower or "performance" in query_lower:
-            return {
-                "tool": "predict_student_performance",
-                "parameters": {"student_id": student_id},
-                "confidence": 0.7,
-                "reasoning": "Query mentions prediction or performance"
-            }
+            }]
         else:
-            return {
-                "tool": None,
-                "parameters": {},
-                "confidence": 0.0,
-                "reasoning": "No matching tool found for this query"
-            }
+            tools = []
+        
+        # If compound query detected with "and", try to extract second intent
+        if is_compound and " and " in query_lower:
+            parts = query_lower.split(" and ")
+            if len(parts) == 2:
+                second_part = parts[1].strip()
+                if "learning path" in second_part or "path" in second_part:
+                    tools.append({
+                        "tool": "create_learning_path",
+                        "parameters": {"student_id": student_id},
+                        "reasoning": "Second part mentions learning path"
+                    })
+                elif "intervention" in second_part:
+                    tools.append({
+                        "tool": "create_intervention_task",
+                        "parameters": {"student_id": student_id, "assigned_to": teacher_id},
+                        "reasoning": "Second part mentions intervention"
+                    })
+        
+        return {
+            "tools": tools,
+            "is_compound": len(tools) > 1,
+            "confidence": 0.6 if is_compound else 0.7
+        }
 
 
 class ConversationalRouter:
@@ -478,62 +526,132 @@ class ConversationalRouter:
         self.intent_parser = intent_parser
         self.client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
     
-    def process_query(self, query: str) -> Dict[str, Any]:
+    def process_query(self, query: str, use_llm: bool = True) -> Dict[str, Any]:
         """Process a natural language query and return a response"""
         # Parse the query
-        parsed = self.intent_parser.parse_query(query)
+        parsed = self.intent_parser.parse_query(query, use_llm)
         
-        if not parsed["tool"]:
+        # Check if no tools were found
+        if not parsed.get("tools") or len(parsed["tools"]) == 0:
+            # Handle greetings
+            if parsed.get("is_greeting"):
+                return {
+                    "success": True,
+                    "tool_used": "greeting",
+                    "natural_language_response": "Hello! I'm your AI assistant for student behavior analytics. I can help you analyze student behavior, create learning paths, suggest interventions, and more. Try asking: 'Analyze student S001' or 'Show me at-risk students'.",
+                    "confidence": 1.0,
+                    "is_compound": False
+                }
             return {
                 "success": False,
-                "message": f"I couldn't understand what you want to do. {parsed['reasoning']}",
+                "message": f"I couldn't understand what you want to do.",
                 "suggestion": "Try asking about analyzing a student, creating tasks, or getting class overview."
             }
         
-        # Get the tool
-        tool = self.tool_registry.get_tool(parsed["tool"])
+        # Handle compound queries (multiple tools)
+        if parsed.get("is_compound", False):
+            return self._process_compound_query(query, parsed)
+        
+        # Handle single tool queries (backward compatibility)
+        tool_info = parsed["tools"][0]
+        tool_name = tool_info["tool"]
+        tool = self.tool_registry.get_tool(tool_name)
+        
         if not tool:
             return {
                 "success": False,
-                "message": f"Tool '{parsed['tool']}' not found in registry."
+                "message": f"Tool '{tool_name}' not found in registry."
             }
         
         # Extract parameters, filtering out None values
-        parameters = {k: v for k, v in parsed["parameters"].items() if v is not None}
+        parameters = {k: v for k, v in tool_info["parameters"].items() if v is not None}
         
         # Call the tool
         try:
             result = tool["function"](**parameters)
             
             # Generate natural language response
-            response = self._generate_response(query, parsed, result)
+            response = self._generate_response(query, tool_info, result)
             
             return {
                 "success": True,
-                "tool_used": parsed["tool"],
+                "tool_used": tool_name,
                 "tool_description": tool["description"],
                 "result": result,
                 "natural_language_response": response,
-                "confidence": parsed["confidence"]
+                "confidence": parsed["confidence"],
+                "is_compound": False
             }
         except Exception as e:
             return {
                 "success": False,
                 "message": f"Error executing tool: {str(e)}",
-                "tool_used": parsed["tool"]
+                "tool_used": tool_name
             }
     
-    def _generate_response(self, query: str, parsed: Dict[str, Any], result: Dict[str, Any]) -> str:
+    def _process_compound_query(self, query: str, parsed: Dict[str, Any]) -> Dict[str, Any]:
+        """Process a compound query with multiple tools"""
+        tools_info = parsed["tools"]
+        results = []
+        errors = []
+        
+        for tool_info in tools_info:
+            tool_name = tool_info["tool"]
+            tool = self.tool_registry.get_tool(tool_name)
+            
+            if not tool:
+                errors.append(f"Tool '{tool_name}' not found in registry.")
+                continue
+            
+            # Extract parameters, filtering out None values
+            parameters = {k: v for k, v in tool_info["parameters"].items() if v is not None}
+            
+            # Call the tool
+            try:
+                result = tool["function"](**parameters)
+                results.append({
+                    "tool": tool_name,
+                    "tool_description": tool["description"],
+                    "result": result,
+                    "success": True
+                })
+            except Exception as e:
+                errors.append(f"Error executing {tool_name}: {str(e)}")
+                results.append({
+                    "tool": tool_name,
+                    "tool_description": tool["description"],
+                    "result": None,
+                    "success": False,
+                    "error": str(e)
+                })
+        
+        # Generate combined response
+        combined_response = self._generate_compound_response(query, results)
+        
+        return {
+            "success": len([r for r in results if r["success"]]) > 0,
+            "is_compound": True,
+            "tools_used": [r["tool"] for r in results],
+            "results": results,
+            "errors": errors,
+            "natural_language_response": combined_response,
+            "confidence": parsed["confidence"]
+        }
+    
+    def _generate_response(self, query: str, tool_info: Dict[str, Any], result: Dict[str, Any]) -> str:
         """Generate a natural language response based on the result"""
         if not self.client:
             # Fallback to simple response
-            return self._simple_response(parsed, result)
+            return self._simple_response(tool_info, result)
+        
+        tool_name = tool_info["tool"]
+        tool = self.tool_registry.get_tool(tool_name)
         
         prompt = f"""
 You are a helpful assistant for a student behavior analysis system. The user asked: "{query}"
 
-We used the tool: {parsed['tool']}
-Tool description: {self.tool_registry.get_tool(parsed['tool'])['description']}
+We used the tool: {tool_name}
+Tool description: {tool['description'] if tool else 'Unknown'}
 
 The tool returned this result:
 {json.dumps(result, indent=2, default=str)}
@@ -550,11 +668,45 @@ Generate a natural, conversational response to the user. Be helpful and explain 
             return response.choices[0].message.content
         except Exception as e:
             print(f"LLM response generation failed: {e}, falling back to simple response")
-            return self._simple_response(parsed, result)
+            return self._simple_response(tool_info, result)
     
-    def _simple_response(self, parsed: Dict[str, Any], result: Dict[str, Any]) -> str:
+    def _generate_compound_response(self, query: str, results: List[Dict[str, Any]]) -> str:
+        """Generate a combined natural language response for compound queries"""
+        if not self.client:
+            # Fallback to simple compound response
+            return self._simple_compound_response(results)
+        
+        # Build a summary of all tool results
+        results_summary = []
+        for result in results:
+            if result["success"]:
+                results_summary.append(f"- {result['tool']}: {json.dumps(result['result'], indent=2, default=str)}")
+            else:
+                results_summary.append(f"- {result['tool']}: Failed - {result.get('error', 'Unknown error')}")
+        
+        prompt = f"""
+You are a helpful assistant for a student behavior analysis system. The user asked: "{query}"
+
+We executed multiple tools and got these results:
+{chr(10).join(results_summary)}
+
+Generate a natural, conversational response that combines all these results into a coherent summary. Explain what each tool found or did, and provide an overall synthesis. Keep it concise but informative.
+"""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"LLM compound response generation failed: {e}, falling back to simple response")
+            return self._simple_compound_response(results)
+    
+    def _simple_response(self, tool_info: Dict[str, Any], result: Dict[str, Any]) -> str:
         """Simple response generation as fallback"""
-        tool_name = parsed["tool"]
+        tool_name = tool_info["tool"]
         
         if tool_name == "analyze_student_behavior":
             if "error" in result:
@@ -581,6 +733,26 @@ Generate a natural, conversational response to the user. Be helpful and explain 
             if "error" in result:
                 return f"Operation completed with an error: {result['error']}"
             return f"Operation completed successfully. Tool: {tool_name}"
+    
+    def _simple_compound_response(self, results: List[Dict[str, Any]]) -> str:
+        """Simple compound response generation as fallback"""
+        responses = []
+        for result in results:
+            if result["success"]:
+                tool_name = result["tool"]
+                result_data = result["result"]
+                if tool_name == "analyze_student_behavior":
+                    responses.append(f"Analysis: behavioral tag '{result_data.get('behavioral_tag', 'unknown')}', marks {result_data.get('avg_marks', 0)}%")
+                elif tool_name == "create_learning_path":
+                    responses.append(f"Learning path created at level '{result_data.get('level', 'unknown')}'")
+                elif tool_name == "create_intervention_task":
+                    responses.append(f"Intervention task {result_data.get('task_id', 'unknown')} created")
+                else:
+                    responses.append(f"{tool_name}: completed successfully")
+            else:
+                responses.append(f"{result['tool']}: failed - {result.get('error', 'Unknown error')}")
+        
+        return "I've completed the following tasks: " + ". ".join(responses)
 
 
 # Global instances
