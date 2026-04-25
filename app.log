@@ -610,3 +610,58 @@
 2026-04-25 23:03:25,083 - __main__ - WARNING - Missing authorization header
 2026-04-25 23:03:25,088 - __main__ - WARNING - Missing authorization header
 2026-04-25 23:03:25,091 - __main__ - INFO - Generating token for user health_check
+2026-04-25 23:03:50,058 - microservice_monitor - INFO - Running comprehensive health check
+2026-04-25 23:03:57,265 - microservice_monitor - INFO - Running comprehensive health check
+2026-04-25 23:08:22,862 - __main__ - INFO - Generating token for user test_ai_query
+2026-04-25 23:08:24,908 - __main__ - INFO - User test_ai_query requesting AI query build: Show me average marks by subject for students with distraction score above 5
+2026-04-25 23:08:26,177 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 23:08:26,198 - __main__ - INFO - AI generated query config for: Show me average marks by subject for students with distraction score above 5
+2026-04-25 23:08:28,255 - __main__ - INFO - User test_ai_query requesting AI query build: Get all students with marks less than 50
+2026-04-25 23:08:29,273 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 23:08:29,274 - __main__ - INFO - AI generated query config for: Get all students with marks less than 50
+2026-04-25 23:08:31,331 - __main__ - INFO - User test_ai_query requesting AI query build: Analyze student behavior for students with high distraction
+2026-04-25 23:08:32,152 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 23:08:32,154 - __main__ - INFO - AI generated query config for: Analyze student behavior for students with high distraction
+2026-04-25 23:08:34,220 - __main__ - INFO - User test_ai_query requesting AI query build: Show class overview with average marks
+2026-04-25 23:08:35,123 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 23:08:35,124 - __main__ - INFO - AI generated query config for: Show class overview with average marks
+2026-04-25 23:08:37,167 - __main__ - INFO - User test_ai_query requesting AI query build: Invalid query that should fail
+2026-04-25 23:08:38,104 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 23:08:38,106 - __main__ - INFO - AI generated query config for: Invalid query that should fail
+2026-04-25 23:09:43,741 - __main__ - INFO - Generating token for user test_role_chat
+2026-04-25 23:09:45,771 - __main__ - INFO - User test_role_chat (role: developer) sent query: hello
+2026-04-25 23:09:45,771 - __main__ - INFO - Query processed successfully, tool used: greeting
+2026-04-25 23:09:47,817 - __main__ - INFO - User test_role_chat (role: student) sent query: hello
+2026-04-25 23:09:47,818 - __main__ - INFO - Query processed successfully, tool used: greeting
+2026-04-25 23:09:49,859 - __main__ - INFO - User test_role_chat (role: faculty) sent query: hello
+2026-04-25 23:09:49,859 - __main__ - INFO - Query processed successfully, tool used: greeting
+2026-04-25 23:09:51,915 - __main__ - INFO - User test_role_chat (role: parent) sent query: hello
+2026-04-25 23:09:51,916 - __main__ - INFO - Query processed successfully, tool used: greeting
+2026-04-25 23:09:53,929 - __main__ - INFO - User test_role_chat (role: principal) sent query: hello
+2026-04-25 23:09:53,929 - __main__ - INFO - Query processed successfully, tool used: greeting
+2026-04-25 23:09:55,987 - __main__ - INFO - User test_role_chat (role: developer) sent query: Analyze student S001
+2026-04-25 23:09:56,695 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 23:09:56,989 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:09:56,990 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 23:09:59,031 - __main__ - INFO - User test_role_chat (role: student) sent query: Analyze student S001
+2026-04-25 23:09:59,112 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:09:59,187 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:09:59,188 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 23:10:01,242 - __main__ - INFO - User test_role_chat (role: faculty) sent query: Analyze student S001
+2026-04-25 23:10:01,334 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:10:01,485 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:10:01,486 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 23:10:03,528 - __main__ - INFO - User test_role_chat (role: parent) sent query: Analyze student S001
+2026-04-25 23:10:03,662 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:10:03,730 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:10:03,732 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 23:10:05,787 - __main__ - INFO - User test_role_chat (role: principal) sent query: Analyze student S001
+2026-04-25 23:10:05,971 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:10:06,086 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:10:06,088 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 23:11:01,871 - microservice_monitor - INFO - Running comprehensive health check
+2026-04-25 23:11:04,933 - microservice_monitor - INFO - Running comprehensive health check
+2026-04-25 23:12:49,055 - __main__ - INFO - Generating token for user api_builder
+2026-04-25 23:13:17,553 - __main__ - INFO - User api_builder requesting AI query build: create a api for parents specific reporting
+2026-04-25 23:13:18,374 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 23:13:18,376 - __main__ - ERROR - AI query build failed: Failed to generate query from natural language: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kp2dxxyefp1t7kxrxgyszn65` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99621, Requested 469. Please try again in 1m17.759999999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}

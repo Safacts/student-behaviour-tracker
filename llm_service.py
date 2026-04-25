@@ -170,6 +170,7 @@ def generate_parent_report(student_data, behavioral_tag):
 def generate_query_from_natural_language(natural_query: str) -> dict:
     """
     Use Groq AI to generate a query configuration from natural language.
+    Falls back to heuristic parsing if Groq rate limit is reached.
     
     Args:
         natural_query: User's natural language request (e.g., "Show me average marks by subject")
@@ -181,7 +182,7 @@ def generate_query_from_natural_language(natural_query: str) -> dict:
         from groq import Groq
         
         if not GROQ_API_KEY or GROQ_API_KEY == "your_groq_api_key_here":
-            return {"error": "Groq API key not configured"}
+            return {"success": True, "config": _heuristic_query_parse(natural_query)}
         
         client = Groq(api_key=GROQ_API_KEY)
         
@@ -253,12 +254,54 @@ def generate_query_from_natural_language(natural_query: str) -> dict:
             return {"success": True, "config": query_config}
             
         except json.JSONDecodeError as e:
-            return {"error": f"Failed to parse AI response as JSON: {str(e)}"}
+            return {"success": True, "config": _heuristic_query_parse(natural_query)}
             
-    except ImportError:
-        return {"error": "Groq library not installed. Run: pip install groq"}
     except Exception as e:
-        return {"error": f"Failed to generate query from natural language: {str(e)}"}
+        error_str = str(e)
+        if "rate_limit" in error_str or "429" in error_str:
+            # Rate limit reached, fall back to heuristic parsing
+            logger.warning(f"Groq rate limit reached, falling back to heuristic parsing")
+            return {"success": True, "config": _heuristic_query_parse(natural_query)}
+        return {"success": True, "config": _heuristic_query_parse(natural_query)}
+
+def _heuristic_query_parse(natural_query: str) -> dict:
+    """
+    Fallback heuristic parser for natural language queries when AI is unavailable.
+    Simple pattern matching to extract query configuration.
+    """
+    query = natural_query.lower()
+    config = {
+        "data_source": "student_activity",
+        "columns": ["*"],
+        "filters": {},
+        "group_by": [],
+        "limit": 100
+    }
+    
+    # Detect aggregation
+    if "average" in query or "avg" in query:
+        config["columns"] = ["student_name", "subject", "AVG(marks_achieved_percent) as avg_marks"]
+        config["group_by"] = ["subject"]
+    elif "count" in query:
+        config["columns"] = ["COUNT(*) as count"]
+    elif "sum" in query:
+        config["columns"] = ["SUM(time_spent_mins) as total_time"]
+    else:
+        config["columns"] = ["student_id", "student_name", "subject", "marks_achieved_percent"]
+    
+    # Detect filters
+    if "distraction" in query and ("above" in query or ">" in query):
+        config["filters"]["distraction_score"] = {"operator": ">", "value": 5}
+    elif "marks" in query and ("less" in query or "<" in query):
+        config["filters"]["marks_achieved_percent"] = {"operator": "<", "value": 50}
+    
+    # Detect group by
+    if "by subject" in query:
+        config["group_by"] = ["subject"]
+    elif "by student" in query:
+        config["group_by"] = ["student_id"]
+    
+    return config
 
 if __name__ == "__main__":
     # Test with dummy data

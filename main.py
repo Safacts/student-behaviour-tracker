@@ -22,6 +22,7 @@ from typing import Dict, Any, Optional
 from analyzer import analyze_student
 from llm_service import generate_parent_report, generate_query_from_natural_language
 from microservice_monitor import MicroserviceMonitor
+from workflow_engine import WorkflowEngine
 from agents import (
     analyze_student_behavior,
     create_learning_path,
@@ -114,6 +115,9 @@ query_builder = QueryBuilderService()
 
 # Initialize MicroserviceMonitor
 microservice_monitor = MicroserviceMonitor()
+
+# Initialize WorkflowEngine
+workflow_engine = WorkflowEngine()
 
 # Add CORS middleware
 app.add_middleware(
@@ -413,6 +417,145 @@ async def debug_report():
     except Exception as e:
         logger.error(f"Debug report generation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Debug report generation failed: {str(e)}")
+
+# Workflow Automation Endpoints
+@app.post("/api/workflows")
+async def create_workflow(request: Dict[str, Any], current_user: str = Depends(verify_auth_token)):
+    """Create a new workflow"""
+    try:
+        from workflow_engine import Workflow, Node, Edge
+        import uuid
+        
+        workflow_id = str(uuid.uuid4())
+        name = request.get("name")
+        description = request.get("description", "")
+        nodes_data = request.get("nodes", [])
+        edges_data = request.get("edges", [])
+        
+        if not name:
+            raise HTTPException(status_code=400, detail="Workflow name is required")
+        
+        nodes = [
+            Node(
+                id=n["id"],
+                type=n["type"],
+                config=n.get("config", {})
+            )
+            for n in nodes_data
+        ]
+        
+        edges = [
+            Edge(
+                source=e["source"],
+                target=e["target"],
+                condition=e.get("condition")
+            )
+            for e in edges_data
+        ]
+        
+        workflow = Workflow(
+            id=workflow_id,
+            name=name,
+            description=description,
+            nodes=nodes,
+            edges=edges
+        )
+        
+        workflow_engine.save_workflow(workflow)
+        
+        logger.info(f"User {current_user} created workflow: {name}")
+        
+        return {
+            "success": True,
+            "workflow_id": workflow_id,
+            "name": name,
+            "description": description
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to create workflow: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create workflow: {str(e)}")
+
+@app.get("/api/workflows")
+async def list_workflows(current_user: str = Depends(verify_auth_token)):
+    """List all workflows"""
+    try:
+        workflows = workflow_engine.list_workflows()
+        return {"success": True, "workflows": workflows}
+    except Exception as e:
+        logger.error(f"Failed to list workflows: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list workflows: {str(e)}")
+
+@app.get("/api/workflows/{workflow_id}")
+async def get_workflow(workflow_id: str, current_user: str = Depends(verify_auth_token)):
+    """Get a specific workflow"""
+    try:
+        workflow = workflow_engine.load_workflow(workflow_id)
+        
+        if not workflow:
+            raise HTTPException(status_code=404, detail="Workflow not found")
+        
+        return {
+            "success": True,
+            "workflow": {
+                "id": workflow.id,
+                "name": workflow.name,
+                "description": workflow.description,
+                "nodes": [
+                    {
+                        "id": n.id,
+                        "type": n.type,
+                        "config": n.config,
+                        "status": n.status.value
+                    }
+                    for n in workflow.nodes
+                ],
+                "edges": [
+                    {
+                        "source": e.source,
+                        "target": e.target,
+                        "condition": e.condition
+                    }
+                    for e in workflow.edges
+                ]
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get workflow: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get workflow: {str(e)}")
+
+@app.post("/api/workflows/{workflow_id}/execute")
+async def execute_workflow(workflow_id: str, current_user: str = Depends(verify_auth_token)):
+    """Execute a workflow"""
+    try:
+        result = workflow_engine.execute_workflow(workflow_id)
+        
+        logger.info(f"User {current_user} executed workflow: {workflow_id}")
+        
+        return result
+    except Exception as e:
+        logger.error(f"Failed to execute workflow: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute workflow: {str(e)}")
+
+@app.delete("/api/workflows/{workflow_id}")
+async def delete_workflow(workflow_id: str, current_user: str = Depends(verify_auth_token)):
+    """Delete a workflow"""
+    try:
+        conn = sqlite3.connect("behavior.db")
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM workflows WHERE id = ?", (workflow_id,))
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"User {current_user} deleted workflow: {workflow_id}")
+        
+        return {"success": True, "message": f"Workflow {workflow_id} deleted"}
+    except Exception as e:
+        logger.error(f"Failed to delete workflow: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete workflow: {str(e)}")
 
 @app.get("/api/query/config/execute/{name}")
 async def execute_saved_config(name: str, current_user: str = Depends(verify_auth_token)):
