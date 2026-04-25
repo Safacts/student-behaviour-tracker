@@ -8,14 +8,30 @@ import sqlite3
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 
+# Redis integration for session management
+try:
+    import redis
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+
 class SimpleAuth:
     """Production-ready authentication without external dependencies"""
     
-    def __init__(self, secret_key: str = "default-secret-key-change-in-production", db_path: str = "behavior.db"):
+    def __init__(self, secret_key: str = "default-secret-key-change-in-production", db_path: str = "behavior.db", redis_url: str = None):
         self.secret_key = secret_key
         self.api_keys = {}  # In production, use database
         self.sessions = {}  # In production, use Redis
         self.db_path = db_path
+        self.redis_client = None
+        
+        if REDIS_AVAILABLE and redis_url:
+            try:
+                self.redis_client = redis.from_url(redis_url)
+                self.redis_client.ping()
+                print("Redis connected successfully for session management")
+            except Exception as e:
+                print(f"Redis connection failed: {e}. Using in-memory sessions.")
     
     def _get_db_connection(self):
         """Get database connection"""
@@ -62,15 +78,48 @@ class SimpleAuth:
         ).hexdigest()
         
         token = f"{token_data}:{signature}"
-        self.sessions[token] = {
-            "user_id": user_id,
-            "expires_at": expires_at.isoformat(),
-            "created_at": datetime.now().isoformat()
-        }
+        
+        # Use Redis if available, otherwise use in-memory storage
+        if self.redis_client:
+            self.redis_client.setex(
+                f"session:{token}",
+                int(expires_in_hours * 3600),
+                f"{user_id}:{expires_at.isoformat()}:{datetime.now().isoformat()}"
+            )
+        else:
+            self.sessions[token] = {
+                "user_id": user_id,
+                "expires_at": expires_at.isoformat(),
+                "created_at": datetime.now().isoformat()
+            }
+        
         return token
     
     def validate_token(self, token: str) -> Optional[Dict[str, Any]]:
         """Validate a token and return user info"""
+        session_data = None
+        
+        # Check Redis first if available
+        if self.redis_client:
+            session_data = self.redis_client.get(f"session:{token}")
+            if session_data:
+                session_data = session_data.decode('utf-8').split(':')
+                if len(session_data) >= 2:
+                    user_id = session_data[0]
+                    expires_at = datetime.fromisoformat(session_data[1])
+                    
+                    if datetime.now() > expires_at:
+                        self.redis_client.delete(f"session:{token}")
+                        return None
+                    
+                    return {
+                        "user_id": user_id,
+                        "valid": True,
+                        "expires_at": session_data[1]
+                    }
+            return None
+        
+        # Fallback to in-memory storage
         if token not in self.sessions:
             return None
         
@@ -89,6 +138,9 @@ class SimpleAuth:
     
     def revoke_token(self, token: str) -> bool:
         """Revoke a token"""
+        if self.redis_client:
+            return self.redis_client.delete(f"session:{token}") > 0
+        
         if token in self.sessions:
             del self.sessions[token]
             return True
