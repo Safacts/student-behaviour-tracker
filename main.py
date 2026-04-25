@@ -21,6 +21,7 @@ from typing import Dict, Any, Optional
 
 from analyzer import analyze_student
 from llm_service import generate_parent_report, generate_query_from_natural_language
+from microservice_monitor import MicroserviceMonitor
 from agents import (
     analyze_student_behavior,
     create_learning_path,
@@ -110,6 +111,9 @@ app = FastAPI(title="Student Behavior Analysis PoC")
 
 # Initialize QueryBuilderService
 query_builder = QueryBuilderService()
+
+# Initialize MicroserviceMonitor
+microservice_monitor = MicroserviceMonitor()
 
 # Add CORS middleware
 app.add_middleware(
@@ -383,6 +387,32 @@ async def delete_config(name: str, current_user: str = Depends(verify_auth_token
     except Exception as e:
         logger.error(f"Failed to delete config: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to delete config: {str(e)}")
+
+# Health Check Endpoints
+@app.get("/api/health")
+async def health_check():
+    """Basic health check endpoint"""
+    return {"status": "healthy", "service": "student-behavior-analytics"}
+
+@app.get("/api/health/detailed")
+async def detailed_health_check():
+    """Comprehensive health check for all system components"""
+    try:
+        health_report = microservice_monitor.comprehensive_health_check()
+        return health_report
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+@app.get("/api/health/debug")
+async def debug_report():
+    """Generate detailed debugging report with actionable recommendations"""
+    try:
+        debug_report = microservice_monitor.generate_debug_report()
+        return debug_report
+    except Exception as e:
+        logger.error(f"Debug report generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Debug report generation failed: {str(e)}")
 
 @app.get("/api/query/config/execute/{name}")
 async def execute_saved_config(name: str, current_user: str = Depends(verify_auth_token)):

@@ -593,3 +593,20 @@
 2026-04-25 22:33:42,167 - __main__ - INFO - User test_user executed saved config: test_config
 2026-04-25 22:33:44,215 - query_builder - INFO - Deleted API Builder config: test_config
 2026-04-25 22:38:04,416 - __main__ - INFO - Generating token for user api_builder
+2026-04-25 23:00:15,128 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:00:17,188 - __main__ - INFO - Generating token for user health_check
+2026-04-25 23:00:19,250 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:00:45,486 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:00:47,559 - __main__ - INFO - Generating token for user health_check
+2026-04-25 23:00:49,599 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:00:56,884 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:00:58,944 - __main__ - INFO - Generating token for user health_check
+2026-04-25 23:01:01,003 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:01:43,507 - microservice_monitor - INFO - Running comprehensive health check
+2026-04-25 23:02:19,942 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:02:19,950 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:02:19,959 - __main__ - INFO - Generating token for user health_check
+2026-04-25 23:02:48,696 - microservice_monitor - INFO - Running comprehensive health check
+2026-04-25 23:03:25,083 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:03:25,088 - __main__ - WARNING - Missing authorization header
+2026-04-25 23:03:25,091 - __main__ - INFO - Generating token for user health_check
