@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+import sqlite3
 
 class ChatRequest(BaseModel):
     query: str
@@ -124,7 +125,8 @@ def get_students():
         conn.close()
         return students
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to retrieve students")
+        logger.error(f"Failed to retrieve students: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve students: {str(e)}")
 
 @app.get("/api/activity-logs")
 def get_activity_logs():
@@ -138,39 +140,30 @@ def get_activity_logs():
         conn.close()
         return logs
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to retrieve activity logs")
+        logger.error(f"Failed to retrieve activity logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve activity logs: {str(e)}")
 
 @app.get("/api/report/{student_id}")
 def get_report(student_id: str):
     """Generate comprehensive student report"""
     try:
+        logger.info(f"Generating report for student {student_id}")
         analysis = analyze_student(student_id)
         if not analysis:
+            logger.warning(f"Student {student_id} not found in analysis")
             raise HTTPException(status_code=404, detail="Student not found")
         
         conn = sqlite3.connect('behavior.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT student_name FROM student_activity WHERE student_id = ? LIMIT 1", (student_id,))
-        name_row = cursor.fetchone()
+        cursor.execute("SELECT * FROM student_activity WHERE student_id = ? ORDER BY date DESC", (student_id,))
+        columns = [column[0] for column in cursor.description]
+        activities = [dict(zip(columns, row)) for row in cursor.fetchall()]
         conn.close()
-        
-        student_name = name_row[0] if name_row else "Unknown"
-        analysis["student_name"] = student_name
-
-        ai_report = generate_parent_report(analysis, analysis["behavioral_tag"])
         
         return {
             "student_id": student_id,
-            "student_name": student_name,
-            "stats": {
-                "total_time": analysis["total_study_time"],
-                "avg_distraction": analysis["avg_distraction"],
-                "avg_marks": analysis["avg_marks"]
-            },
-            "analysis": {
-                "tag": analysis["behavioral_tag"]
-            },
-            "ai_recommendation": ai_report
+            "analysis": analysis,
+            "activities": activities
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
@@ -1053,14 +1046,16 @@ if __name__ == "__main__":
     import os
     
     # SSL Configuration
-    ssl_context = None
+    ssl_keyfile = None
+    ssl_certfile = None
+    
     if os.getenv("ENABLE_SSL", "false").lower() == "true":
         cert_file = os.getenv("SSL_CERT_FILE", "cert.pem")
         key_file = os.getenv("SSL_KEY_FILE", "key.pem")
         
         if os.path.exists(cert_file) and os.path.exists(key_file):
-            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            ssl_context.load_cert_chain(certfile=cert_file, keyfile=key_file)
+            ssl_certfile = cert_file
+            ssl_keyfile = key_file
             logger.info("SSL enabled - server will run on HTTPS")
         else:
             logger.warning(f"SSL certificates not found at {cert_file} and {key_file}. Running on HTTP.")
@@ -1069,5 +1064,6 @@ if __name__ == "__main__":
         app, 
         host="0.0.0.0", 
         port=8000,
-        ssl=ssl_context
+        ssl_keyfile=ssl_keyfile,
+        ssl_certfile=ssl_certfile
     )
