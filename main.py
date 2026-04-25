@@ -8,6 +8,7 @@ import sqlite3
 class ChatRequest(BaseModel):
     query: str
     use_llm: bool = True
+    role: str = "student"
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -19,7 +20,7 @@ import traceback
 from typing import Dict, Any, Optional
 
 from analyzer import analyze_student
-from llm_service import generate_parent_report
+from llm_service import generate_parent_report, generate_query_from_natural_language
 from agents import (
     analyze_student_behavior,
     create_learning_path,
@@ -414,6 +415,33 @@ async def execute_saved_config(name: str, current_user: str = Depends(verify_aut
     except Exception as e:
         logger.error(f"Failed to execute saved config: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to execute saved config: {str(e)}")
+
+@app.post("/api/query/ai-build")
+async def ai_build_query(request: Dict[str, str], current_user: str = Depends(verify_auth_token)):
+    """Use AI to generate query configuration from natural language"""
+    try:
+        natural_query = request.get('query')
+        
+        if not natural_query:
+            raise HTTPException(status_code=400, detail="query is required")
+        
+        logger.info(f"User {current_user} requesting AI query build: {natural_query}")
+        
+        # Generate query configuration using Groq
+        result = generate_query_from_natural_language(natural_query)
+        
+        if 'error' in result:
+            logger.error(f"AI query build failed: {result['error']}")
+            raise HTTPException(status_code=500, detail=result['error'])
+        
+        logger.info(f"AI generated query config for: {natural_query}")
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"AI query build failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"AI query build failed: {str(e)}")
 
 @app.get("/api/agents")
 def list_agents():
@@ -1288,14 +1316,14 @@ def get_auth_stats():
 async def chat_endpoint(request: ChatRequest, current_user: str = Depends(verify_auth_token), request_obj: Request = None):
     """Conversational API endpoint for natural language interaction with agents"""
     try:
-        logger.info(f"User {current_user} sent query: {request.query}")
+        logger.info(f"User {current_user} (role: {request.role}) sent query: {request.query}")
         
         if not request.query:
             logger.warning("Query is required")
             raise HTTPException(status_code=400, detail="Query is required")
         
-        # Process the query through the conversational router
-        result = conversational_router.process_query(request.query, request.use_llm)
+        # Process the query through the conversational router with role parameter
+        result = conversational_router.process_query(request.query, request.use_llm, request.role)
         
         logger.info(f"Query processed successfully, tool used: {result.get('tool_used', 'none')}")
         return result

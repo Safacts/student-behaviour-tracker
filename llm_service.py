@@ -2,10 +2,12 @@ import openai
 import google.generativeai as genai
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 def generate_fallback_report(student_data, behavioral_tag):
     """
@@ -164,6 +166,99 @@ def generate_parent_report(student_data, behavioral_tag):
     
     # Both APIs failed or unavailable, use rule-based fallback
     return generate_fallback_report(student_data, behavioral_tag)
+
+def generate_query_from_natural_language(natural_query: str) -> dict:
+    """
+    Use Groq AI to generate a query configuration from natural language.
+    
+    Args:
+        natural_query: User's natural language request (e.g., "Show me average marks by subject")
+    
+    Returns:
+        Query configuration dict with data_source, columns, filters, group_by, limit
+    """
+    try:
+        from groq import Groq
+        
+        if not GROQ_API_KEY or GROQ_API_KEY == "your_groq_api_key_here":
+            return {"error": "Groq API key not configured"}
+        
+        client = Groq(api_key=GROQ_API_KEY)
+        
+        prompt = f"""
+        You are a SQL query builder assistant. Convert the following natural language request into a JSON configuration for a query builder.
+
+        Available tables and columns:
+        - student_activity: id, student_id, student_name, activity_type, subject, topic, chapter, time_spent_mins, marks_achieved_percent, distraction_score, date
+        - tasks: id, task_id, student_id, assigned_to, assigned_by, status, priority, due_date, created_at, completed_at, completed_by, notes
+        - teacher_assignments: id, student_id, teacher_id, subject, assigned_at, assigned_by, is_active
+
+        Allowed aggregation functions: SUM, AVG, COUNT, MIN, MAX
+        Allowed operators: =, !=, >, <, >=, <=, LIKE, IN
+
+        User request: "{natural_query}"
+
+        Return ONLY a valid JSON object with this exact structure:
+        {{
+            "data_source": "table_name",
+            "columns": ["column1", "column2", "AVG(column) as alias"],
+            "filters": {{"column": {{"operator": "operator", "value": "value"}}}},
+            "group_by": ["column1", "column2"],
+            "limit": 100
+        }}
+
+        Rules:
+        - If user wants averages/sums/counts, include aggregation functions in columns
+        - If user wants to filter, add to filters object with operator and value
+        - If user wants to group by subject/student/etc, add to group_by array
+        - Default limit to 100 if not specified
+        - Return ONLY the JSON, no explanation
+        """
+        
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "You are a SQL query builder assistant. Return only valid JSON, no explanations."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500,
+            temperature=0.3
+        )
+        
+        result_text = response.choices[0].message.content.strip()
+        
+        # Parse the JSON response
+        try:
+            # Remove any markdown code blocks if present
+            if result_text.startswith("```"):
+                result_text = result_text.split("```")[1]
+                if result_text.startswith("json"):
+                    result_text = result_text[4:]
+                result_text = result_text.strip()
+            
+            query_config = json.loads(result_text)
+            
+            # Validate required fields
+            if "data_source" not in query_config:
+                query_config["data_source"] = "student_activity"  # default
+            if "columns" not in query_config:
+                query_config["columns"] = ["*"]
+            if "filters" not in query_config:
+                query_config["filters"] = {}
+            if "group_by" not in query_config:
+                query_config["group_by"] = []
+            if "limit" not in query_config:
+                query_config["limit"] = 100
+            
+            return {"success": True, "config": query_config}
+            
+        except json.JSONDecodeError as e:
+            return {"error": f"Failed to parse AI response as JSON: {str(e)}"}
+            
+    except ImportError:
+        return {"error": "Groq library not installed. Run: pip install groq"}
+    except Exception as e:
+        return {"error": f"Failed to generate query from natural language: {str(e)}"}
 
 if __name__ == "__main__":
     # Test with dummy data

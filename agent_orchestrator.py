@@ -526,19 +526,67 @@ class ConversationalRouter:
         self.intent_parser = intent_parser
         self.client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
     
-    def process_query(self, query: str, use_llm: bool = True) -> Dict[str, Any]:
+    def _get_role_greeting(self, role: str) -> str:
+        """Get role-based greeting response"""
+        greetings = {
+            "developer": "Hello! I'm your AI assistant for the student behavior analytics system. I can help you with technical details, API documentation, debugging, and system analysis.",
+            "student": "Hello! I'm here to help you understand your learning patterns and improve your academic performance. I can analyze your study habits and suggest improvements.",
+            "faculty": "Hello! I'm your AI assistant for class management. I can help you analyze student performance, identify at-risk students, and suggest teaching strategies.",
+            "parent": "Hello! I'm here to help you understand your child's academic journey. I can provide insights into their progress and suggest ways to support their learning.",
+            "principal": "Hello! I'm your AI assistant for school-wide analytics. I can help you with performance metrics, trends, and strategic insights for the institution."
+        }
+        return greetings.get(role, greetings["student"])
+    
+    def _adapt_response_for_role(self, response: str, role: str, tool_used: str) -> str:
+        """Adapt the response based on user role"""
+        # Role-specific adaptations
+        role_prefixes = {
+            "developer": {
+                "default": "🔧 Technical details: "
+            },
+            "student": {
+                "default": "📚 Here's what you need to know: "
+            },
+            "faculty": {
+                "default": "👨‍🏫 Teaching insight: "
+            },
+            "parent": {
+                "default": "👨‍👩‍👧 For your child: "
+            },
+            "principal": {
+                "default": "🏫 School-wide view: "
+            }
+        }
+        
+        # Add role-specific context
+        prefix = role_prefixes.get(role, {}).get("default", "")
+        
+        # For technical queries, developers get more detail
+        if role == "developer" and tool_used in ["behavior", "learning_path", "intervention"]:
+            response = response + " [API endpoints: /api/agents/" + tool_used + "/{student_id}]"
+        
+        # For students, simplify the language
+        if role == "student":
+            response = response.replace("behavioral patterns", "study habits")
+            response = response.replace("intervention strategies", "improvement tips")
+            response = response.replace("performance metrics", "your progress")
+        
+        return prefix + response
+    
+    def process_query(self, query: str, use_llm: bool = True, role: str = "student") -> Dict[str, Any]:
         """Process a natural language query and return a response"""
         # Parse the query
         parsed = self.intent_parser.parse_query(query, use_llm)
         
         # Check if no tools were found
         if not parsed.get("tools") or len(parsed["tools"]) == 0:
-            # Handle greetings
+            # Handle greetings with role-based responses
             if parsed.get("is_greeting"):
+                greeting_response = self._get_role_greeting(role)
                 return {
                     "success": True,
                     "tool_used": "greeting",
-                    "natural_language_response": "Hello! I'm your AI assistant for student behavior analytics. I can help you analyze student behavior, create learning paths, suggest interventions, and more. Try asking: 'Analyze student S001' or 'Show me at-risk students'.",
+                    "natural_language_response": greeting_response,
                     "confidence": 1.0,
                     "is_compound": False
                 }
@@ -550,7 +598,7 @@ class ConversationalRouter:
         
         # Handle compound queries (multiple tools)
         if parsed.get("is_compound", False):
-            return self._process_compound_query(query, parsed)
+            return self._process_compound_query(query, parsed, role)
         
         # Handle single tool queries (backward compatibility)
         tool_info = parsed["tools"][0]
@@ -570,8 +618,8 @@ class ConversationalRouter:
         try:
             result = tool["function"](**parameters)
             
-            # Generate natural language response
-            response = self._generate_response(query, tool_info, result)
+            # Generate natural language response with role context
+            response = self._generate_response(query, tool_info, result, role)
             
             return {
                 "success": True,
@@ -589,7 +637,7 @@ class ConversationalRouter:
                 "tool_used": tool_name
             }
     
-    def _process_compound_query(self, query: str, parsed: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_compound_query(self, query: str, parsed: Dict[str, Any], role: str = "student") -> Dict[str, Any]:
         """Process a compound query with multiple tools"""
         tools_info = parsed["tools"]
         results = []
@@ -626,7 +674,7 @@ class ConversationalRouter:
                 })
         
         # Generate combined response
-        combined_response = self._generate_compound_response(query, results)
+        combined_response = self._generate_compound_response(query, results, role)
         
         return {
             "success": len([r for r in results if r["success"]]) > 0,
@@ -638,17 +686,45 @@ class ConversationalRouter:
             "confidence": parsed["confidence"]
         }
     
-    def _generate_response(self, query: str, tool_info: Dict[str, Any], result: Dict[str, Any]) -> str:
+    def _get_role_greeting(self, role: str) -> str:
+        """Generate a role-based greeting message"""
+        greetings = {
+            "developer": "Hello! I'm your AI assistant for student behavior analytics. I can help you with technical details, API documentation, debugging, and system integration. Ask me about endpoints, data structures, or development workflows.",
+            "student": "Hello! I'm your AI assistant for student behavior analytics. I can help you understand your learning patterns, suggest study strategies, and explain your progress in simple terms. Try asking: 'How am I doing in my studies?' or 'What can I do to improve?'",
+            "faculty": "Hello! I'm your AI assistant for student behavior analytics. I can help you with class insights, teaching recommendations, and student performance analysis. Try asking: 'Show me class performance' or 'Which students need intervention?'",
+            "parent": "Hello! I'm your AI assistant for student behavior analytics. I can help you understand your child's progress, identify concerns, and suggest next steps. Try asking: 'How is my child doing?' or 'What should I focus on?'",
+            "principal": "Hello! I'm your AI assistant for student behavior analytics. I can help you with school-wide metrics, trends, and strategic insights. Try asking: 'Show me school-wide performance' or 'What are the key trends?'"
+        }
+        return greetings.get(role, greetings["student"])
+    
+    def _get_role_instructions(self, role: str) -> str:
+        """Get role-specific instructions for response generation"""
+        instructions = {
+            "developer": "Provide technical details, API information, debugging suggestions, and system-level insights. Use technical terminology when appropriate.",
+            "student": "Provide simple, actionable explanations. Avoid jargon. Focus on what the student can do to improve. Be encouraging and supportive.",
+            "faculty": "Provide class-level insights, teaching recommendations, and pedagogical suggestions. Focus on actionable classroom strategies.",
+            "parent": "Provide information about child's progress in understandable terms. Focus on concerns and practical next steps for parents. Be reassuring but honest.",
+            "principal": "Provide school-wide metrics, trends, and strategic insights. Focus on data-driven decision making and systemic improvements."
+        }
+        return instructions.get(role, instructions["student"])
+    
+    def _generate_response(self, query: str, tool_info: Dict[str, Any], result: Dict[str, Any], role: str = "student") -> str:
         """Generate a natural language response based on the result"""
         if not self.client:
-            # Fallback to simple response
-            return self._simple_response(tool_info, result)
+            # Fallback to simple response with role context
+            return self._simple_response(tool_info, result, role)
         
         tool_name = tool_info["tool"]
         tool = self.tool_registry.get_tool(tool_name)
         
+        # Get role-specific instructions
+        role_instructions = self._get_role_instructions(role)
+        
         prompt = f"""
 You are a helpful assistant for a student behavior analysis system. The user asked: "{query}"
+
+User role: {role}
+{role_instructions}
 
 We used the tool: {tool_name}
 Tool description: {tool['description'] if tool else 'Unknown'}
@@ -656,7 +732,7 @@ Tool description: {tool['description'] if tool else 'Unknown'}
 The tool returned this result:
 {json.dumps(result, indent=2, default=str)}
 
-Generate a natural, conversational response to the user. Be helpful and explain what the tool found or did. Keep it concise but informative.
+Generate a natural, conversational response to the user. Be helpful and explain what the tool found or did. Keep it concise but informative. Tailor your response to the user's role ({role}).
 """
         
         try:
@@ -668,9 +744,9 @@ Generate a natural, conversational response to the user. Be helpful and explain 
             return response.choices[0].message.content
         except Exception as e:
             print(f"LLM response generation failed: {e}, falling back to simple response")
-            return self._simple_response(tool_info, result)
+            return self._simple_response(tool_info, result, role)
     
-    def _generate_compound_response(self, query: str, results: List[Dict[str, Any]]) -> str:
+    def _generate_compound_response(self, query: str, results: List[Dict[str, Any]], role: str = "student") -> str:
         """Generate a combined natural language response for compound queries"""
         if not self.client:
             # Fallback to simple compound response
@@ -684,13 +760,19 @@ Generate a natural, conversational response to the user. Be helpful and explain 
             else:
                 results_summary.append(f"- {result['tool']}: Failed - {result.get('error', 'Unknown error')}")
         
+        # Get role-specific instructions
+        role_instructions = self._get_role_instructions(role)
+        
         prompt = f"""
 You are a helpful assistant for a student behavior analysis system. The user asked: "{query}"
+
+User role: {role}
+{role_instructions}
 
 We executed multiple tools and got these results:
 {chr(10).join(results_summary)}
 
-Generate a natural, conversational response that combines all these results into a coherent summary. Explain what each tool found or did, and provide an overall synthesis. Keep it concise but informative.
+Generate a natural, conversational response that combines all these results into a coherent summary. Explain what each tool found or did, and provide an overall synthesis. Keep it concise but informative. Tailor your response to the user's role ({role}).
 """
         
         try:
@@ -702,27 +784,30 @@ Generate a natural, conversational response that combines all these results into
             return response.choices[0].message.content
         except Exception as e:
             print(f"LLM compound response generation failed: {e}, falling back to simple response")
-            return self._simple_compound_response(results)
+            return self._simple_compound_response(results, role)
     
-    def _simple_response(self, tool_info: Dict[str, Any], result: Dict[str, Any]) -> str:
+    def _simple_response(self, tool_info: Dict[str, Any], result: Dict[str, Any], role: str = "student") -> str:
         """Simple response generation as fallback"""
         tool_name = tool_info["tool"]
         
         if tool_name == "analyze_student_behavior":
             if "error" in result:
                 return f"Sorry, I couldn't analyze the student: {result['error']}"
-            return f"Analysis complete. The student has a behavioral tag of '{result.get('behavioral_tag', 'unknown')}' with average marks of {result.get('avg_marks', 0)}% and average distraction score of {result.get('avg_distraction', 0)}/10."
+            base_response = f"Analysis complete. The student has a behavioral tag of '{result.get('behavioral_tag', 'unknown')}' with average marks of {result.get('avg_marks', 0)}% and average distraction score of {result.get('avg_distraction', 0)}/10."
+            return self._adapt_response_for_role(base_response, role, tool_name)
         
         elif tool_name == "identify_at_risk_students":
             if "error" in result:
                 return f"Sorry, I couldn't identify at-risk students: {result['error']}"
             count = len(result.get("at_risk_students", []))
-            return f"Found {count} at-risk students: {', '.join([s['student_id'] for s in result.get('at_risk_students', [])])}"
+            base_response = f"Found {count} at-risk students: {', '.join([s['student_id'] for s in result.get('at_risk_students', [])])}"
+            return self._adapt_response_for_role(base_response, role, tool_name)
         
         elif tool_name == "get_class_overview":
             if "error" in result:
                 return f"Sorry, I couldn't get class overview: {result['error']}"
-            return f"Class overview: {result.get('total_students', 0)} students, average marks {result.get('class_avg_marks', 0)}%, average distraction {result.get('class_avg_distraction', 0)}/10."
+            base_response = f"Class overview: {result.get('total_students', 0)} students, average marks {result.get('class_avg_marks', 0)}%, average distraction {result.get('class_avg_distraction', 0)}/10."
+            return self._adapt_response_for_role(base_response, role, tool_name)
         
         elif tool_name == "create_intervention_task":
             if "error" in result:
@@ -734,7 +819,7 @@ Generate a natural, conversational response that combines all these results into
                 return f"Operation completed with an error: {result['error']}"
             return f"Operation completed successfully. Tool: {tool_name}"
     
-    def _simple_compound_response(self, results: List[Dict[str, Any]]) -> str:
+    def _simple_compound_response(self, results: List[Dict[str, Any]], role: str = "student") -> str:
         """Simple compound response generation as fallback"""
         responses = []
         for result in results:
@@ -752,7 +837,20 @@ Generate a natural, conversational response that combines all these results into
             else:
                 responses.append(f"{result['tool']}: failed - {result.get('error', 'Unknown error')}")
         
-        return "I've completed the following tasks: " + ". ".join(responses)
+        # Add role-specific context
+        role_context = ""
+        if role == "student":
+            role_context = " Here's what I found for your studies."
+        elif role == "parent":
+            role_context = " Here's what I found about your child."
+        elif role == "faculty":
+            role_context = " Here are the class insights."
+        elif role == "principal":
+            role_context = " Here are the school-wide metrics."
+        elif role == "developer":
+            role_context = " Here are the technical details."
+        
+        return "I've completed the following tasks: " + ". ".join(responses) + role_context
 
 
 # Global instances

@@ -78,15 +78,45 @@
         </div>
     </header>
 
-    <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="text-center mb-8">
+    <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Role Selector -->
+        <div class="glass p-4 rounded-2xl shadow-lg mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-lg font-semibold text-slate-800">I am a:</span>
+                    <select id="role-selector" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+                        <option value="developer">Developer</option>
+                        <option value="student">Student</option>
+                        <option value="faculty">Faculty</option>
+                        <option value="parent">Parent</option>
+                        <option value="principal">Principal</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-slate-600">AI Mode:</span>
+                    <button id="mode-toggle" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-200 transition-colors">
+                        LLM
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="glass p-6 rounded-2xl shadow-lg">
             <h1 class="text-4xl font-extrabold text-indigo-900 mb-2">Conversational AI Assistant</h1>
             <p class="text-slate-600">Ask questions about student behavior, analysis, and interventions in natural language</p>
         </div>
 
         <!-- Chat Interface -->
         <div class="glass rounded-2xl shadow-lg overflow-hidden">
+            <!-- Role Indicator -->
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3">
+                <div class="flex items-center justify-between text-white">
+                    <span class="text-sm font-medium">Current Role: <span id="current-role" class="font-bold">Developer</span></span>
+                    <span class="text-xs opacity-80">Responses tailored to your role</span>
+                </div>
+            </div>
+            
             <!-- Chat Messages -->
             <div id="chat-messages" class="chat-container overflow-y-auto p-6 space-y-4">
                 <!-- Welcome message -->
@@ -176,8 +206,36 @@
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
         const sendButton = document.getElementById('send-button');
+        const roleSelector = document.getElementById('role-selector');
+        const currentRoleDisplay = document.getElementById('current-role');
         let authToken = null;
         let useLLM = true; // Default to LLM mode
+        let currentRole = 'developer'; // Default role
+
+        // Handle role change
+        roleSelector.addEventListener('change', (e) => {
+            currentRole = e.target.value;
+            currentRoleDisplay.textContent = currentRole.charAt(0).toUpperCase() + currentRole.slice(1);
+            
+            // Update welcome message based on role
+            updateWelcomeMessage();
+        });
+
+        // Update welcome message based on role
+        function updateWelcomeMessage() {
+            const welcomeMessages = {
+                developer: "Hello! I'm your AI assistant for student behavior analytics. I can help you with technical details, API documentation, debugging, and system analysis.",
+                student: "Hello! I'm your AI assistant. I can help you understand your learning patterns, improve your study habits, and achieve your academic goals.",
+                faculty: "Hello! I'm your AI assistant. I can help you with class insights, teaching recommendations, student performance analysis, and intervention strategies.",
+                parent: "Hello! I'm your AI assistant. I can help you understand your child's progress, identify areas for improvement, and provide actionable next steps.",
+                principal: "Hello! I'm your AI assistant. I can help you with school-wide metrics, performance trends, strategic insights, and resource allocation."
+            };
+            
+            const welcomeDiv = chatMessages.querySelector('.message-ai p');
+            if (welcomeDiv) {
+                welcomeDiv.textContent = welcomeMessages[currentRole];
+            }
+        }
 
         // Toggle between LLM and Heuristic mode
         function toggleMode() {
@@ -229,6 +287,9 @@
             showTypingIndicator();
 
             try {
+                const roleSelector = document.getElementById('role-selector');
+                const selectedRole = roleSelector ? roleSelector.value : 'student';
+                
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
@@ -237,7 +298,8 @@
                     },
                     body: JSON.stringify({ 
                         query: message,
-                        use_llm: useLLM
+                        use_llm: useLLM,
+                        role: selectedRole
                     })
                 });
 
