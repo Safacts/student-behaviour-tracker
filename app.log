@@ -420,3 +420,8 @@
 2026-04-25 21:14:13,428 - __main__ - INFO - Generating weekly report from 2026-04-16 to 2026-04-23, student: S001
 2026-04-25 21:14:15,472 - __main__ - INFO - Generating daily report for 2026-04-23, student: None
 2026-04-25 21:14:17,529 - __main__ - INFO - Generating daily report for 2026-04-23, student: S001
+2026-04-25 21:18:17,374 - __main__ - INFO - Generating token for user test_user
+2026-04-25 21:18:21,486 - __main__ - INFO - User test_user executing custom query
+2026-04-25 21:18:21,486 - query_builder - INFO - Executing query: SELECT student_id, student_name, subject, time_spent_mins FROM student_activity WHERE date = ? LIMIT 5
+2026-04-25 21:18:21,487 - query_builder - INFO - Params: ['2026-04-23']
+2026-04-25 21:20:29,124 - __main__ - INFO - Generating report for student S002

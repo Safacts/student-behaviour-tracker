@@ -253,9 +253,40 @@
         let filters = [];
         let aggregations = [];
         let groupBy = '';
+        let authToken = null;
 
         // Data source schemas - will be loaded from API
         let dataSchemas = {};
+
+        // Fetch auth token
+        async function fetchAuthToken() {
+            try {
+                const response = await fetch('/api/auth/token?user_id=api_builder');
+                const data = await response.json();
+                authToken = data.token;
+            } catch (error) {
+                console.error('Failed to fetch auth token:', error);
+            }
+        }
+
+        // Load table schemas from API
+        async function loadTableSchemas() {
+            try {
+                const response = await fetch('/api/query/tables', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                dataSchemas = await response.json();
+                
+                // Update data source dropdown
+                const dataSourceSelect = document.getElementById('data-source');
+                dataSourceSelect.innerHTML = '<option value="">Choose data source...</option>' +
+                    Object.keys(dataSchemas).map(table => 
+                        `<option value="${table}">${table}</option>`
+                    ).join('');
+            } catch (error) {
+                console.error('Failed to load table schemas:', error);
+            }
+        }
 
         // DOM Elements
         const dataSourceSelect = document.getElementById('data-source');
@@ -296,8 +327,8 @@
         // Functions
         function handleDataSourceChange(e) {
             currentDataSource = e.target.value;
-            if (currentDataSource) {
-                const columns = dataSchemas[currentDataSource];
+            if (currentDataSource && dataSchemas[currentDataSource]) {
+                const columns = dataSchemas[currentDataSource].columns;
                 availableColumnsDiv.classList.remove('hidden');
                 columnsList.innerHTML = columns.map(col => 
                     `<span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">${col}</span>`
@@ -436,14 +467,23 @@
             try {
                 const payload = {
                     data_source: currentDataSource,
-                    filters: filters,
-                    aggregations: aggregations,
-                    group_by: groupBy
+                    columns: aggregations.length > 0 ? aggregations.map(a => `${a.function}(${a.column}) AS ${a.alias}`) : ['*'],
+                    filters: {},
+                    group_by: groupBy ? [groupBy] : [],
+                    limit: 10
                 };
+
+                // Convert filters array to object format
+                filters.forEach(f => {
+                    payload.filters[f.column] = { operator: f.operator, value: f.value };
+                });
 
                 const response = await fetch('/api/query/custom', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
                     body: JSON.stringify(payload)
                 });
 
@@ -547,30 +587,28 @@
             let code = '';
             const baseUrl = 'http://localhost:8000';
             
+            // Build payload in the correct format
+            const payload = {
+                data_source: currentDataSource,
+                columns: aggregations.length > 0 ? aggregations.map(a => `${a.function}(${a.column}) AS ${a.alias}`) : ['*'],
+                filters: {},
+                group_by: groupBy ? [groupBy] : [],
+                limit: 10
+            };
+            
+            filters.forEach(f => {
+                payload.filters[f.column] = { operator: f.operator, value: f.value };
+            });
+            
             switch(format) {
                 case 'curl':
-                    code = `curl -X POST ${baseUrl}/api/query/custom \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify({
-                        data_source: currentDataSource,
-                        filters,
-                        aggregations,
-                        group_by: groupBy
-                    }, null, 2)}'`;
+                    code = `curl -X POST ${baseUrl}/api/query/custom \\\n  -H "Content-Type: application/json" \\\n  -H "Authorization: Bearer YOUR_TOKEN" \\\n  -d '${JSON.stringify(payload, null, 2)}'`;
                     break;
                 case 'python':
-                    code = `import requests\n\nurl = "${baseUrl}/api/query/custom"\npayload = ${JSON.stringify({
-                        data_source: currentDataSource,
-                        filters,
-                        aggregations,
-                        group_by: groupBy
-                    }, null, 2)}\n\nresponse = requests.post(url, json=payload)\nprint(response.json())`;
+                    code = `import requests\n\nurl = "${baseUrl}/api/query/custom"\nheaders = {"Authorization": "Bearer YOUR_TOKEN"}\npayload = ${JSON.stringify(payload, null, 2)}\n\nresponse = requests.post(url, json=payload, headers=headers)\nprint(response.json())`;
                     break;
                 case 'js':
-                    code = `fetch('${baseUrl}/api/query/custom', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify(${JSON.stringify({
-                        data_source: currentDataSource,
-                        filters,
-                        aggregations,
-                        group_by: groupBy
-                    }, null, 2)})\n}).then(r => r.json()).then(console.log);`;
+                    code = `fetch('${baseUrl}/api/query/custom', {\n  method: 'POST',\n  headers: { \n    'Content-Type': 'application/json',\n    'Authorization': 'Bearer YOUR_TOKEN'\n  },\n  body: JSON.stringify(${JSON.stringify(payload, null, 2)})\n}).then(r => r.json()).then(console.log);`;
                     break;
             }
             
@@ -580,7 +618,13 @@
         }
 
         // Initialize
-        renderSavedConfigs();
+        async function init() {
+            await fetchAuthToken();
+            await loadTableSchemas();
+            renderSavedConfigs();
+        }
+        
+        init();
     </script>
 </body>
 </html>

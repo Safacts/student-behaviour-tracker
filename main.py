@@ -834,15 +834,18 @@ def read_monitor_html():
     return FileResponse("monitor.html")
 
 @app.get("/chat")
-def read_chat():
+def serve_chat():
+    """Serve chat interface"""
     return FileResponse("chat.html")
 
 @app.get("/chat.html")
-def read_chat_html():
+def serve_chat_html():
+    """Serve chat interface"""
     return FileResponse("chat.html")
 
 @app.get("/api-builder")
-def read_api_builder():
+def serve_api_builder():
+    """Serve API Builder interface"""
     return FileResponse("api-builder.html")
 
 @app.get("/api-builder.html")
