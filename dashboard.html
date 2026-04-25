@@ -153,6 +153,65 @@
                 </div>
             </div>
 
+            <!-- Weekly/Daily Reports -->
+            <div class="glass p-8 rounded-2xl shadow-lg mb-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-6">Custom Reports</h3>
+
+                <!-- Weekly Report -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 mb-6">
+                    <h4 class="text-lg font-semibold text-slate-800 mb-4">Weekly Report</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Start Date</label>
+                            <input type="date" id="weekly-start-date" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">End Date</label>
+                            <input type="date" id="weekly-end-date" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Student (Optional)</label>
+                            <select id="weekly-student-select" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Students</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="weekly-report-btn" class="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+                                Generate Weekly Report
+                            </button>
+                        </div>
+                    </div>
+                    <div id="weekly-report-results" class="hidden">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Daily Report -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200">
+                    <h4 class="text-lg font-semibold text-slate-800 mb-4">Daily Report</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Date</label>
+                            <input type="date" id="daily-date" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Student (Optional)</label>
+                            <select id="daily-student-select" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Students</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="daily-report-btn" class="w-full px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors">
+                                Generate Daily Report
+                            </button>
+                        </div>
+                    </div>
+                    <div id="daily-report-results" class="hidden">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Analysis Results -->
             <div id="analysis-results" class="hidden space-y-6">
                 <!-- Stats Grid -->
@@ -356,16 +415,35 @@
             // Additional activity statistics can be calculated here
         }
 
-        // Populate student select
-        function populateStudentSelect() {
+        // Populate students dropdown
+        function populateStudentsDropdown(students) {
             const select = document.getElementById('student-select');
             select.innerHTML = '<option value="">Choose a student...</option>';
-            
+
+            const weeklySelect = document.getElementById('weekly-student-select');
+            weeklySelect.innerHTML = '<option value="">All Students</option>';
+
+            const dailySelect = document.getElementById('daily-student-select');
+            dailySelect.innerHTML = '<option value="">All Students</option>';
+
             students.forEach(student => {
+                // Main student select
                 const option = document.createElement('option');
                 option.value = student.id;
                 option.textContent = `${student.name} (${student.id})`;
                 select.appendChild(option);
+
+                // Weekly report select
+                const weeklyOption = document.createElement('option');
+                weeklyOption.value = student.id;
+                weeklyOption.textContent = `${student.name} (${student.id})`;
+                weeklySelect.appendChild(weeklyOption);
+
+                // Daily report select
+                const dailyOption = document.createElement('option');
+                dailyOption.value = student.id;
+                dailyOption.textContent = `${student.name} (${student.id})`;
+                dailySelect.appendChild(dailyOption);
             });
         }
 
@@ -469,8 +547,211 @@
             document.getElementById('analyze-btn').addEventListener('click', analyzeStudent);
             document.getElementById('student-select').addEventListener('change', analyzeStudent);
 
+            // Weekly/Daily reports
+            document.getElementById('weekly-report-btn').addEventListener('click', generateWeeklyReport);
+            document.getElementById('daily-report-btn').addEventListener('click', generateDailyReport);
+
             // Testing
             document.getElementById('run-tests-btn').addEventListener('click', runAllTests);
+        }
+
+        // Generate weekly report
+        async function generateWeeklyReport() {
+            const startDate = document.getElementById('weekly-start-date').value;
+            const endDate = document.getElementById('weekly-end-date').value;
+            const studentId = document.getElementById('weekly-student-select').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select start and end dates');
+                return;
+            }
+
+            const btn = document.getElementById('weekly-report-btn');
+            btn.textContent = 'Generating...';
+            btn.disabled = true;
+
+            try {
+                let url = `/api/report/weekly?start_date=${startDate}&end_date=${endDate}`;
+                if (studentId) {
+                    url += `&student_id=${studentId}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayWeeklyReportResults(data);
+                } else {
+                    alert('Failed to generate weekly report');
+                }
+            } catch (err) {
+                alert(`Error generating weekly report: ${err.message}`);
+            } finally {
+                btn.textContent = 'Generate Weekly Report';
+                btn.disabled = false;
+            }
+        }
+
+        // Display weekly report results
+        function displayWeeklyReportResults(data) {
+            const resultsDiv = document.getElementById('weekly-report-results');
+            resultsDiv.classList.remove('hidden');
+
+            let html = `
+                <div class="mt-4">
+                    <h5 class="font-semibold text-slate-800 mb-3">Weekly Report Results (${data.date_range.start} to ${data.date_range.end})</h5>
+                    ${data.student_filter ? `<p class="text-sm text-slate-600 mb-3">Student: ${data.student_filter}</p>` : ''}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">Student</th>
+                                    <th class="px-4 py-2 text-left">Subject</th>
+                                    <th class="px-4 py-2 text-left">Total Time</th>
+                                    <th class="px-4 py-2 text-left">Avg Marks</th>
+                                    <th class="px-4 py-2 text-left">Avg Distraction</th>
+                                    <th class="px-4 py-2 text-left">Activities</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            if (data.data && data.data.length > 0) {
+                data.data.forEach(row => {
+                    html += `
+                        <tr class="border-b">
+                            <td class="px-4 py-2">${row.student_name || row.student_id}</td>
+                            <td class="px-4 py-2">${row.subject}</td>
+                            <td class="px-4 py-2">${row.total_time} min</td>
+                            <td class="px-4 py-2">${row.avg_marks.toFixed(1)}%</td>
+                            <td class="px-4 py-2">${row.avg_distraction.toFixed(2)}</td>
+                            <td class="px-4 py-2">${row.activity_count}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += '<tr><td colspan="6" class="px-4 py-2 text-center text-slate-500">No data found for the selected date range</td></tr>';
+            }
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Generate daily report
+        async function generateDailyReport() {
+            const date = document.getElementById('daily-date').value;
+            const studentId = document.getElementById('daily-student-select').value;
+
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+
+            const btn = document.getElementById('daily-report-btn');
+            btn.textContent = 'Generating...';
+            btn.disabled = true;
+
+            try {
+                let url = `/api/report/daily?date=${date}`;
+                if (studentId) {
+                    url += `&student_id=${studentId}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayDailyReportResults(data);
+                } else {
+                    alert('Failed to generate daily report');
+                }
+            } catch (err) {
+                alert(`Error generating daily report: ${err.message}`);
+            } finally {
+                btn.textContent = 'Generate Daily Report';
+                btn.disabled = false;
+            }
+        }
+
+        // Display daily report results
+        function displayDailyReportResults(data) {
+            const resultsDiv = document.getElementById('daily-report-results');
+            resultsDiv.classList.remove('hidden');
+
+            const summary = data.summary;
+
+            let html = `
+                <div class="mt-4">
+                    <h5 class="font-semibold text-slate-800 mb-3">Daily Report for ${data.date}</h5>
+                    ${data.student_filter ? `<p class="text-sm text-slate-600 mb-3">Student: ${data.student_filter}</p>` : ''}
+                    
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <div class="bg-indigo-50 p-3 rounded-lg">
+                            <div class="text-sm text-slate-600">Total Activities</div>
+                            <div class="text-xl font-bold text-indigo-600">${summary.total_activities}</div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg">
+                            <div class="text-sm text-slate-600">Total Time</div>
+                            <div class="text-xl font-bold text-green-600">${summary.total_time_minutes} min</div>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <div class="text-sm text-slate-600">Avg Marks</div>
+                            <div class="text-xl font-bold text-blue-600">${summary.avg_marks_percent}%</div>
+                        </div>
+                        <div class="bg-orange-50 p-3 rounded-lg">
+                            <div class="text-sm text-slate-600">Avg Distraction</div>
+                            <div class="text-xl font-bold text-orange-600">${summary.avg_distraction_score}</div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">Student</th>
+                                    <th class="px-4 py-2 text-left">Activity Type</th>
+                                    <th class="px-4 py-2 text-left">Subject</th>
+                                    <th class="px-4 py-2 text-left">Topic</th>
+                                    <th class="px-4 py-2 text-left">Time</th>
+                                    <th class="px-4 py-2 text-left">Marks</th>
+                                    <th class="px-4 py-2 text-left">Distraction</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            if (data.activities && data.activities.length > 0) {
+                data.activities.forEach(row => {
+                    html += `
+                        <tr class="border-b">
+                            <td class="px-4 py-2">${row.student_name || row.student_id}</td>
+                            <td class="px-4 py-2">${row.activity_type}</td>
+                            <td class="px-4 py-2">${row.subject}</td>
+                            <td class="px-4 py-2">${row.topic}</td>
+                            <td class="px-4 py-2">${row.time_spent_mins} min</td>
+                            <td class="px-4 py-2">${row.marks_achieved_percent}%</td>
+                            <td class="px-4 py-2">${row.distraction_score}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += '<tr><td colspan="7" class="px-4 py-2 text-center text-slate-500">No activities found for the selected date</td></tr>';
+            }
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
         }
 
         // Analyze student

@@ -376,3 +376,43 @@
 2026-04-25 19:39:45,062 - __main__ - INFO - User chat_user sent query: how are you
 2026-04-25 19:39:45,868 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-04-25 19:39:45,895 - __main__ - INFO - Query processed successfully, tool used: none
+2026-04-25 19:43:40,442 - __main__ - INFO - Generating token for user test_user
+2026-04-25 19:43:42,491 - __main__ - INFO - User test_user sent query: Analyze student S001
+2026-04-25 19:43:43,812 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 19:43:45,241 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 19:43:45,243 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 19:43:47,286 - __main__ - INFO - User test_user sent query: Analyze student S001
+2026-04-25 19:43:48,283 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 19:43:48,286 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 20:53:55,223 - __main__ - INFO - Generating token for user chat_user
+2026-04-25 20:54:01,066 - __main__ - INFO - User chat_user sent query: hi
+2026-04-25 20:54:01,067 - __main__ - INFO - Query processed successfully, tool used: greeting
+2026-04-25 20:54:10,900 - __main__ - INFO - User chat_user sent query: hi
+2026-04-25 20:54:10,900 - __main__ - INFO - Query processed successfully, tool used: greeting
+2026-04-25 20:55:44,322 - __main__ - INFO - Generating token for user test_user
+2026-04-25 20:55:46,363 - __main__ - INFO - User test_user sent query: What can you tell me about student S001's performance in mathematics?
+2026-04-25 20:55:47,491 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 20:55:49,951 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 20:55:49,952 - openai._base_client - INFO - Retrying request to /chat/completions in 0.494506 seconds
+2026-04-25 20:55:51,492 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 20:55:51,493 - openai._base_client - INFO - Retrying request to /chat/completions in 0.767195 seconds
+2026-04-25 20:55:52,771 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 20:55:55,173 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 20:55:55,174 - __main__ - INFO - Query processed successfully, tool used: none
+2026-04-25 20:55:57,223 - __main__ - INFO - User test_user sent query: What can you tell me about student S001's performance in mathematics?
+2026-04-25 20:55:57,223 - __main__ - INFO - Query processed successfully, tool used: none
+2026-04-25 21:01:03,281 - __main__ - INFO - User chat_user sent query: who are the at risk students?
+2026-04-25 21:01:04,132 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:01:04,774 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:01:04,775 - __main__ - INFO - Query processed successfully, tool used: identify_at_risk_students
+2026-04-25 21:01:18,187 - __main__ - INFO - User chat_user sent query: who are the at risk students?
+2026-04-25 21:01:19,012 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:01:19,013 - __main__ - INFO - Query processed successfully, tool used: identify_at_risk_students
+2026-04-25 21:09:29,916 - __main__ - INFO - Generating report for student weekly
+2026-04-25 21:09:29,919 - __main__ - WARNING - Student weekly not found in analysis
+2026-04-25 21:09:31,960 - __main__ - INFO - Generating report for student weekly
+2026-04-25 21:09:31,962 - __main__ - WARNING - Student weekly not found in analysis
+2026-04-25 21:09:34,014 - __main__ - INFO - Generating report for student daily
+2026-04-25 21:09:34,015 - __main__ - WARNING - Student daily not found in analysis
+2026-04-25 21:09:36,056 - __main__ - INFO - Generating report for student daily
+2026-04-25 21:09:36,058 - __main__ - WARNING - Student daily not found in analysis

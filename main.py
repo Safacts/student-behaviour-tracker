@@ -142,7 +142,117 @@ def get_activity_logs():
         return logs
     except Exception as e:
         logger.error(f"Failed to retrieve activity logs: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve activity logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
+
+@app.get("/api/report/weekly")
+def weekly_report(start_date: str, end_date: str, student_id: Optional[str] = None):
+    """Generate weekly report with flexible date range"""
+    try:
+        logger.info(f"Generating weekly report from {start_date} to {end_date}, student: {student_id}")
+        
+        conn = sqlite3.connect('behavior.db')
+        cursor = conn.cursor()
+        
+        if student_id:
+            cursor.execute("""
+                SELECT student_id, student_name, subject, 
+                       SUM(time_spent_mins) as total_time,
+                       AVG(marks_achieved_percent) as avg_marks,
+                       AVG(distraction_score) as avg_distraction,
+                       COUNT(*) as activity_count
+                FROM student_activity 
+                WHERE date BETWEEN ? AND ? AND student_id = ?
+                GROUP BY student_id, subject
+                ORDER BY student_id, subject
+            """, (start_date, end_date, student_id))
+        else:
+            cursor.execute("""
+                SELECT student_id, student_name, subject,
+                       SUM(time_spent_mins) as total_time,
+                       AVG(marks_achieved_percent) as avg_marks,
+                       AVG(distraction_score) as avg_distraction,
+                       COUNT(*) as activity_count
+                FROM student_activity 
+                WHERE date BETWEEN ? AND ?
+                GROUP BY student_id, subject
+                ORDER BY student_id, subject
+            """, (start_date, end_date))
+        
+        columns = [column[0] for column in cursor.description]
+        results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        conn.close()
+        
+        return {
+            "report_type": "weekly",
+            "date_range": {"start": start_date, "end": end_date},
+            "student_filter": student_id,
+            "data": results
+        }
+    except sqlite3.Error as e:
+        logger.error(f"Database error in weekly report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error in weekly report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate weekly report: {str(e)}")
+
+@app.get("/api/report/daily")
+def daily_report(date: str, student_id: Optional[str] = None):
+    """Generate daily report for specific date"""
+    try:
+        logger.info(f"Generating daily report for {date}, student: {student_id}")
+        
+        conn = sqlite3.connect('behavior.db')
+        cursor = conn.cursor()
+        
+        if student_id:
+            cursor.execute("""
+                SELECT student_id, student_name, activity_type, subject, topic,
+                       time_spent_mins, marks_achieved_percent, distraction_score
+                FROM student_activity 
+                WHERE date = ? AND student_id = ?
+                ORDER BY subject, activity_type
+            """, (date, student_id))
+        else:
+            cursor.execute("""
+                SELECT student_id, student_name, activity_type, subject, topic,
+                       time_spent_mins, marks_achieved_percent, distraction_score
+                FROM student_activity 
+                WHERE date = ?
+                ORDER BY student_id, subject, activity_type
+            """, (date,))
+        
+        columns = [column[0] for column in cursor.description]
+        activities = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        conn.close()
+        
+        # Calculate summary
+        if activities:
+            total_time = sum(a['time_spent_mins'] for a in activities)
+            avg_marks = sum(a['marks_achieved_percent'] for a in activities if a['marks_achieved_percent']) / len([a for a in activities if a['marks_achieved_percent']])
+            avg_distraction = sum(a['distraction_score'] for a in activities) / len(activities)
+        else:
+            total_time = 0
+            avg_marks = 0
+            avg_distraction = 0
+        
+        return {
+            "report_type": "daily",
+            "date": date,
+            "student_filter": student_id,
+            "summary": {
+                "total_activities": len(activities),
+                "total_time_minutes": total_time,
+                "avg_marks_percent": round(avg_marks, 2),
+                "avg_distraction_score": round(avg_distraction, 2)
+            },
+            "activities": activities
+        }
+    except sqlite3.Error as e:
+        logger.error(f"Database error in daily report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error in daily report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate daily report: {str(e)}")
 
 @app.get("/api/report/{student_id}")
 def get_report(student_id: str):

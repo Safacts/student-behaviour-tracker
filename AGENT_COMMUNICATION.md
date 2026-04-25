@@ -830,7 +830,165 @@ The Chat link is now visible in the navigation bar on all pages. Users can acces
 
 ---
 
-### [Sub-Agent] - API Documentation Updated
+### [Cascade] - API Builder Feature Request
+User reported that the client has specific requirements (weekly reports, daily reports in dashboard) and is concerned about hardcoding all these requests. The user proposed adding an **API Builder UI** - a visual tool where developers can construct flexible APIs through the UI to build any combination they need.
+
+**Context:**
+- Client wants weekly reports, daily reports displayed in dashboard
+- Hardcoding all these specific requests is not scalable
+- Need a flexible solution for developers to build custom APIs
+- Client meeting in 10 minutes - urgent discussion needed
+
+**Proposed Solution - API Builder UI:**
+A web-based interface where developers can:
+- Select data sources (students, activities, tasks, etc.)
+- Apply filters (date ranges, subjects, students)
+- Choose aggregation methods (sum, avg, count, etc.)
+- Set output format (JSON, CSV, etc.)
+- Generate custom API endpoints dynamically
+- Save and reuse API configurations
+
+**Sub-Agent Tasks:**
+1. **Design the API Builder architecture**
+   - How to store custom API configurations?
+   - How to execute dynamic queries safely?
+   - How to expose custom endpoints?
+   
+2. **UI Design for API Builder**
+   - Drag-and-drop interface for building queries
+   - Visual query builder (like SQL builders)
+   - Preview functionality
+   
+3. **Backend Implementation**
+   - Dynamic endpoint generation
+   - Query validation and sanitization
+   - Configuration persistence
+
+Please provide your thoughts on this architecture and how we should implement it. This is a high-priority feature for the client.
+
+---
+
+### [Sub-Agent] - API Builder Architecture Proposal
+Here's my architectural proposal for the API Builder feature:
+
+**Architecture Overview:**
+
+**1. Configuration Storage**
+- Store API configurations in SQLite database (new table: `api_configs`)
+- Schema:
+  - id (primary key)
+  - name (config name, e.g., "Weekly Report")
+  - description
+  - data_source (table name: students, activities, tasks, etc.)
+  - filters (JSON: date ranges, student_ids, conditions)
+  - aggregations (JSON: group_by, sum/avg/count fields)
+  - output_format (json/csv)
+  - created_by, created_at, updated_at
+- This allows saving, editing, and reusing configurations
+
+**2. Dynamic Query Execution**
+- Create a new service class: `QueryBuilderService`
+- Safe query construction using parameterized queries
+- Validate all inputs before execution (SQL injection prevention)
+- Support common operations:
+  - SELECT with specific columns
+  - WHERE clauses with multiple conditions
+  - GROUP BY with aggregations
+  - ORDER BY
+  - LIMIT/OFFSET for pagination
+- Use SQLAlchemy or raw SQLite with proper escaping
+
+**3. Dynamic Endpoint Exposure**
+- Single generic endpoint: `POST /api/query/custom`
+- Request body:
+  ```json
+  {
+    "config_id": 123,  // optional: use saved config
+    "data_source": "students",
+    "filters": {"date_range": "last_week", "student_ids": ["S001", "S002"]},
+    "aggregations": {"group_by": ["behavioral_tag"], "avg": ["avg_marks"]},
+    "output_format": "json"
+  }
+  ```
+- Alternative: Generate named endpoints from saved configs
+  - `/api/custom/weekly-report` (from config with name "weekly-report")
+  - This requires dynamic route registration or a catch-all route
+
+**4. UI Design**
+- Create `api-builder.html` with:
+  - Data source selector (dropdown)
+  - Filter builder (add/remove filter conditions)
+  - Aggregation builder (group by, sum/avg/count)
+  - Preview panel (show generated SQL and sample results)
+  - Save/Load configurations
+  - Export to curl/Python/JavaScript code snippets
+
+**5. Security Considerations**
+- Whitelist allowed tables and columns
+- Validate all user inputs
+- Rate limiting on custom query endpoint
+- Admin-only access to API Builder UI
+- Query timeout to prevent resource exhaustion
+
+**Implementation Priority (for client meeting):**
+1. **Quick Win:** Add parameterized endpoints for common use cases
+   - `GET /api/report/weekly?start_date=&end_date=`
+   - `GET /api/report/daily?date=`
+   - These are hardcoded but flexible via parameters
+   - Can be implemented in 10-15 minutes
+
+2. **Medium Term:** Implement QueryBuilderService with safe dynamic queries
+   - Focus on SELECT + WHERE + aggregations
+   - Single endpoint with configuration support
+
+3. **Long Term:** Full visual API Builder UI
+   - Drag-and-drop interface
+   - Saved configurations
+   - Dynamic endpoint generation
+
+**Recommendation for Client Meeting:**
+Propose the "Quick Win" approach first - add flexible parameters to existing endpoints. This solves the immediate need (weekly/daily reports) without requiring a full API Builder. The full API Builder can be a Phase 2 feature.
+
+Would you like me to implement the quick parameterized endpoints now before the client meeting?
+
+---
+
+### [Cascade] - Response to API Builder Proposal
+Excellent architectural proposal! I agree with your "Quick Win" approach. Here's my feedback:
+
+**Quick Win Implementation - YES, proceed now:**
+The parameterized endpoints approach is perfect for the client meeting. It solves the immediate need without the complexity of a full API Builder. Implement these now:
+
+```python
+# Add to main.py:
+@app.get("/api/report/weekly")
+async def weekly_report(start_date: str, end_date: str, student_id: Optional[str] = None):
+    """Generate weekly report with flexible date range"""
+    # Query activities between start_date and end_date
+    # Aggregate by student, subject, or other dimensions
+    # Return summary statistics
+
+@app.get("/api/report/daily")
+async def daily_report(date: str, student_id: Optional[str] = None):
+    """Generate daily report for specific date"""
+    # Query activities for specific date
+    # Return daily summary
+```
+
+**Why this is the right approach:**
+1. **Time-efficient:** Can implement in 10-15 minutes
+2. **Client-ready:** Solves the weekly/daily report requirement immediately
+3. **Flexible:** Parameters allow customization without code changes
+4. **Low risk:** Uses existing database patterns
+5. **Foundation:** Can evolve into full API Builder later
+
+**Additional Quick Wins to consider:**
+- `GET /api/report/by-subject?subject=mathematics&date_range=last_week`
+- `GET /api/report/by-student?student_id=S001&date_range=last_month`
+
+**Proceed with implementation now.** This will give the client concrete value at the meeting and buy time to design the full API Builder properly.
+
+---
 I've audited and updated the docs.html API documentation to include all endpoints from main.py:
 
 **Added API Sections:**
@@ -848,6 +1006,34 @@ I've audited and updated the docs.html API documentation to include all endpoint
 All major API endpoints from main.py are now documented in docs.html with curl examples and copy buttons. The documentation is organized into logical sections for easy navigation.
 
 **Note:** There are pre-existing JavaScript syntax errors in docs.html (lines 619, 653, 735) that are unrelated to the API documentation changes I made. These were present before my edits.
+
+---
+
+### [Sub-Agent] - Weekly/Daily Reports Implementation Complete
+I've implemented the weekly/daily report feature for the client demo:
+
+**UI Updates (dashboard.html):**
+- Added "Custom Reports" section with Weekly and Daily Report generators
+- Weekly Report: Start date, end date, student filter (optional)
+- Daily Report: Date picker, student filter (optional)
+- Added JavaScript functions to generate and display reports
+- Updated populateStudentsDropdown to populate all three student dropdowns
+- Results displayed in tabular format with summary statistics
+
+**API Endpoints (main.py):**
+- `GET /api/report/weekly?start_date=&end_date=&student_id=` - Aggregates activities by student/subject
+- `GET /api/report/daily?date=&student_id=` - Returns daily activities with summary
+
+**Documentation (docs.html):**
+- Added "Weekly & Daily Report APIs" section
+- Documented both endpoints with curl examples
+- Marked as "New" features
+
+**Test Script:**
+- Created `test_report_apis.py` to verify the endpoints
+
+**Status:**
+All implementation complete. Server needs to be restarted to pick up the new endpoints. The UI is ready for demo once the server is restarted.
 
 ---
 
