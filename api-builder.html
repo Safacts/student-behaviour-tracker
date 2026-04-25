@@ -504,82 +504,139 @@
             }
         }
 
-        function saveConfiguration() {
-            const name = configNameInput.value;
-            if (!name) {
-                alert('Please enter a configuration name');
+        async function saveConfiguration() {
+            if (!currentDataSource) {
+                alert('Please select a data source first');
                 return;
             }
 
-            const config = {
-                name,
-                data_source: currentDataSource,
-                filters,
-                aggregations,
-                group_by: groupBy
-            };
-
-            const savedConfigs = JSON.parse(localStorage.getItem('apiBuilderConfigs') || '[]');
-            savedConfigs.push(config);
-            localStorage.setItem('apiBuilderConfigs', JSON.stringify(savedConfigs));
-            
-            renderSavedConfigs();
-            configNameInput.value = '';
-            alert('Configuration saved successfully!');
-        }
-
-        function loadConfiguration() {
-            const name = prompt('Enter configuration name to load:');
+            const name = prompt('Enter a name for this configuration:');
             if (!name) return;
 
-            const savedConfigs = JSON.parse(localStorage.getItem('apiBuilderConfigs') || '[]');
-            const config = savedConfigs.find(c => c.name === name);
+            const description = prompt('Enter a description (optional):');
 
-            if (config) {
-                currentDataSource = config.data_source;
-                filters = config.filters || [];
-                aggregations = config.aggregations || [];
-                groupBy = config.group_by || '';
-                
-                dataSourceSelect.value = currentDataSource;
-                handleDataSourceChange({ target: dataSourceSelect });
-                renderFilters();
-                renderAggregations();
-                groupBySelect.value = groupBy;
-                updateQueryPreview();
-                
-                alert('Configuration loaded successfully!');
-            } else {
-                alert('Configuration not found');
+            const config = {
+                data_source: currentDataSource,
+                columns: aggregations.length > 0 ? aggregations.map(a => `${a.function}(${a.column}) AS ${a.alias}`) : ['*'],
+                filters: {},
+                group_by: groupBy ? [groupBy] : [],
+                limit: 10
+            };
+
+            filters.forEach(f => {
+                config.filters[f.column] = { operator: f.operator, value: f.value };
+            });
+
+            try {
+                const response = await fetch('/api/query/config/save', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name, config, description })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Configuration saved successfully!');
+                    renderSavedConfigs();
+                } else {
+                    alert('Error: ' + (result.detail || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
             }
         }
 
-        function renderSavedConfigs() {
-            const savedConfigs = JSON.parse(localStorage.getItem('apiBuilderConfigs') || '[]');
-            configsList.innerHTML = savedConfigs.map(config => `
-                <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-                    <span class="text-sm font-medium">${config.name}</span>
-                    <button onclick="loadConfigByName('${config.name}')" class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold">Load</button>
-                </div>
-            `).join('');
+        async function loadConfiguration() {
+            const name = prompt('Enter configuration name to load:');
+            if (!name) return;
+
+            try {
+                const response = await fetch(`/api/query/config/load/${name}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    const config = result.config;
+                    currentDataSource = config.data_source;
+                    filters = Object.entries(config.filters || {}).map(([col, f]) => ({
+                        column: col,
+                        operator: f.operator,
+                        value: f.value
+                    }));
+                    aggregations = [];
+                    groupBy = config.group_by ? config.group_by[0] : '';
+                    
+                    dataSourceSelect.value = currentDataSource;
+                    handleDataSourceChange({ target: dataSourceSelect });
+                    renderFilters();
+                    renderAggregations();
+                    groupBySelect.value = groupBy;
+                    updateQueryPreview();
+                    
+                    alert('Configuration loaded successfully!');
+                } else {
+                    alert('Configuration not found');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
         }
 
-        function loadConfigByName(name) {
-            const savedConfigs = JSON.parse(localStorage.getItem('apiBuilderConfigs') || '[]');
-            const config = savedConfigs.find(c => c.name === name);
+        async function renderSavedConfigs() {
+            try {
+                const response = await fetch('/api/query/config/list', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
 
-            if (config) {
-                currentDataSource = config.data_source;
-                filters = config.filters || [];
-                aggregations = config.aggregations || [];
-                groupBy = config.group_by || '';
-                
-                dataSourceSelect.value = currentDataSource;
-                handleDataSourceChange({ target: dataSourceSelect });
-                renderFilters();
-                renderAggregations();
-                groupBySelect.value = groupBy;
-                updateQueryPreview();
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    const configs = result.configs;
+                    configsList.innerHTML = configs.map(config => `
+                        <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                            <div>
+                                <span class="text-sm font-medium">${config.name}</span>
+                                ${config.description ? `<span class="text-xs text-gray-500 ml-2">${config.description}</span>` : ''}
+                            </div>
+                            <button onclick="loadConfigByName('${config.name}')" class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold">Load</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Failed to load configs:', err);
+            }
+        }
+
+        async function loadConfigByName(name) {
+            try {
+                const response = await fetch(`/api/query/config/load/${name}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    const config = result.config;
+                    currentDataSource = config.data_source;
+                    filters = Object.entries(config.filters || {}).map(([col, f]) => ({
+                        column: col,
+                        operator: f.operator,
+                        value: f.value
+                    }));
+                    aggregations = [];
+                    groupBy = config.group_by ? config.group_by[0] : '';
+                    
+                    dataSourceSelect.value = currentDataSource;
+                    handleDataSourceChange({ target: dataSourceSelect });
+                    renderFilters();
+                    renderAggregations();
+                    groupBySelect.value = groupBy;
+                    updateQueryPreview();
+                }
+            } catch (err) {
+                console.error('Failed to load config:', err);
             }
         }
 

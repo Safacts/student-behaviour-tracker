@@ -4,6 +4,7 @@ QueryBuilderService - Safe dynamic query construction for API Builder
 import sqlite3
 from typing import Dict, Any, List, Optional
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,150 @@ class QueryBuilderService:
     
     def __init__(self, db_path: str = 'behavior.db'):
         self.db_path = db_path
+        self._init_config_table()
+    
+    def _init_config_table(self):
+        """Initialize the API Builder configuration table"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS api_builder_configs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                description TEXT,
+                config_json TEXT NOT NULL,
+                created_by TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+    
+    def save_config(self, name: str, config: Dict[str, Any], description: str = None, created_by: str = None) -> Dict[str, Any]:
+        """Save a configuration to the database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            config_json = json.dumps(config)
+            
+            cursor.execute('''
+                INSERT INTO api_builder_configs (name, description, config_json, created_by)
+                VALUES (?, ?, ?, ?)
+            ''', (name, description, config_json, created_by))
+            
+            conn.commit()
+            config_id = cursor.lastrowid
+            conn.close()
+            
+            logger.info(f"Saved API Builder config: {name} (ID: {config_id})")
+            return {"success": True, "config_id": config_id, "name": name}
+        except sqlite3.IntegrityError:
+            conn.close()
+            logger.error(f"Configuration with name '{name}' already exists")
+            return {"success": False, "error": f"Configuration with name '{name}' already exists"}
+        except Exception as e:
+            logger.error(f"Failed to save config: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    def load_config(self, name: str) -> Dict[str, Any]:
+        """Load a configuration from the database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT id, name, description, config_json, created_by, created_at
+                FROM api_builder_configs
+                WHERE name = ?
+            ''', (name,))
+            
+            row = cursor.fetchone()
+            conn.close()
+            
+            if not row:
+                return {"success": False, "error": f"Configuration '{name}' not found"}
+            
+            config_id, name, description, config_json, created_by, created_at = row
+            
+            return {
+                "success": True,
+                "config_id": config_id,
+                "name": name,
+                "description": description,
+                "config": json.loads(config_json),
+                "created_by": created_by,
+                "created_at": created_at
+            }
+        except Exception as e:
+            logger.error(f"Failed to load config: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    def list_configs(self, created_by: str = None) -> Dict[str, Any]:
+        """List all saved configurations"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            if created_by:
+                cursor.execute('''
+                    SELECT id, name, description, created_by, created_at
+                    FROM api_builder_configs
+                    WHERE created_by = ?
+                    ORDER BY created_at DESC
+                ''', (created_by,))
+            else:
+                cursor.execute('''
+                    SELECT id, name, description, created_by, created_at
+                    FROM api_builder_configs
+                    ORDER BY created_at DESC
+                ''')
+            
+            rows = cursor.fetchall()
+            conn.close()
+            
+            configs = []
+            for row in rows:
+                config_id, name, description, created_by, created_at = row
+                configs.append({
+                    "id": config_id,
+                    "name": name,
+                    "description": description,
+                    "created_by": created_by,
+                    "created_at": created_at
+                })
+            
+            return {"success": True, "configs": configs}
+        except Exception as e:
+            logger.error(f"Failed to list configs: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    def delete_config(self, name: str) -> Dict[str, Any]:
+        """Delete a configuration"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                DELETE FROM api_builder_configs
+                WHERE name = ?
+            ''', (name,))
+            
+            conn.commit()
+            deleted = cursor.rowcount
+            conn.close()
+            
+            if deleted == 0:
+                return {"success": False, "error": f"Configuration '{name}' not found"}
+            
+            logger.info(f"Deleted API Builder config: {name}")
+            return {"success": True, "message": f"Configuration '{name}' deleted"}
+        except Exception as e:
+            logger.error(f"Failed to delete config: {str(e)}")
+            return {"success": False, "error": str(e)}
     
     def validate_table(self, table: str) -> bool:
         """Validate table name against whitelist"""
@@ -45,6 +190,16 @@ class QueryBuilderService:
         """Validate column name against whitelist"""
         if table not in self.ALLOWED_TABLES:
             return False
+        
+        # Handle aggregation functions with aliases (e.g., "AVG(marks_achieved_percent) as avg_marks")
+        if '(' in column and ')' in column:
+            # Extract column name from aggregation
+            import re
+            match = re.search(r'\(([^)]+)\)', column)
+            if match:
+                inner_column = match.group(1).strip()
+                return inner_column in self.ALLOWED_TABLES[table]['columns']
+        
         return column in self.ALLOWED_TABLES[table]['columns'] or column == '*'
     
     def build_query(self, config: Dict[str, Any]) -> tuple:

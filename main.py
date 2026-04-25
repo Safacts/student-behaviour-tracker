@@ -307,9 +307,113 @@ async def custom_query(config: Dict[str, Any], current_user: str = Depends(verif
 @app.get("/api/query/tables")
 async def get_allowed_tables(current_user: str = Depends(verify_auth_token)):
     """Get list of allowed tables and their columns for API Builder UI"""
-    return QueryBuilderService.ALLOWED_TABLES
+    try:
+        return query_builder.ALLOWED_TABLES
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get tables: {str(e)}")
 
-# Agent endpoints - now fully functional
+@app.post("/api/query/config/save")
+async def save_config(request: Dict[str, Any], current_user: str = Depends(verify_auth_token)):
+    """Save API Builder configuration"""
+    try:
+        name = request.get('name')
+        config = request.get('config')
+        description = request.get('description')
+        
+        if not name or not config:
+            raise HTTPException(status_code=400, detail="name and config are required")
+        
+        result = query_builder.save_config(name, config, description, created_by=current_user)
+        
+        if not result.get('success'):
+            raise HTTPException(status_code=400, detail=result.get('error'))
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to save config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to save config: {str(e)}")
+
+@app.get("/api/query/config/load/{name}")
+async def load_config(name: str, current_user: str = Depends(verify_auth_token)):
+    """Load API Builder configuration"""
+    try:
+        result = query_builder.load_config(name)
+        
+        if not result.get('success'):
+            raise HTTPException(status_code=404, detail=result.get('error'))
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to load config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to load config: {str(e)}")
+
+@app.get("/api/query/config/list")
+async def list_configs(current_user: str = Depends(verify_auth_token)):
+    """List all API Builder configurations"""
+    try:
+        result = query_builder.list_configs()
+        
+        if not result.get('success'):
+            raise HTTPException(status_code=500, detail=result.get('error'))
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to list configs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list configs: {str(e)}")
+
+@app.delete("/api/query/config/delete/{name}")
+async def delete_config(name: str, current_user: str = Depends(verify_auth_token)):
+    """Delete API Builder configuration"""
+    try:
+        result = query_builder.delete_config(name)
+        
+        if not result.get('success'):
+            raise HTTPException(status_code=404, detail=result.get('error'))
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete config: {str(e)}")
+
+@app.get("/api/query/config/execute/{name}")
+async def execute_saved_config(name: str, current_user: str = Depends(verify_auth_token)):
+    """Execute a saved configuration as a dynamic endpoint"""
+    try:
+        # Load the configuration
+        config_result = query_builder.load_config(name)
+        
+        if not config_result.get('success'):
+            raise HTTPException(status_code=404, detail=config_result.get('error'))
+        
+        config = config_result.get('config')
+        
+        # Execute the query
+        results = query_builder.execute_query(config)
+        
+        logger.info(f"User {current_user} executed saved config: {name}")
+        
+        return {
+            "success": True,
+            "config_name": name,
+            "data": results,
+            "count": len(results)
+        }
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.warning(f"Invalid saved config: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid saved config: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to execute saved config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute saved config: {str(e)}")
 
 @app.get("/api/agents")
 def list_agents():

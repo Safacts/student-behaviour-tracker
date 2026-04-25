@@ -427,3 +427,162 @@
 2026-04-25 21:20:29,124 - __main__ - INFO - Generating report for student S002
 2026-04-25 21:29:27,685 - __main__ - INFO - Generating report for student S002
 2026-04-25 21:29:34,463 - __main__ - INFO - Generating report for student S002
+2026-04-25 21:35:21,450 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:36:09,741 - __main__ - INFO - Generating token for user chat_user
+2026-04-25 21:36:36,724 - __main__ - INFO - User chat_user sent query: hi
+2026-04-25 21:36:36,732 - __main__ - INFO - Query processed successfully, tool used: greeting
+2026-04-25 21:36:44,973 - __main__ - INFO - User chat_user sent query: what arev you doingf
+2026-04-25 21:36:45,730 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:36:45,736 - __main__ - INFO - Query processed successfully, tool used: none
+2026-04-25 21:38:22,181 - __main__ - INFO - User chat_user sent query: Analyze student S001
+2026-04-25 21:38:22,812 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:38:23,823 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:38:23,836 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 21:39:12,736 - __main__ - INFO - User chat_user sent query: Show me at-risk students
+2026-04-25 21:39:13,656 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:39:14,704 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:39:14,707 - __main__ - INFO - Query processed successfully, tool used: identify_at_risk_students
+2026-04-25 21:39:22,368 - __main__ - INFO - User chat_user sent query: Analyze student S001 and create a learning path
+2026-04-25 21:39:23,070 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:39:24,544 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:39:24,549 - __main__ - INFO - Query processed successfully, tool used: none
+2026-04-25 21:39:28,216 - __main__ - INFO - User chat_user sent query: Get class overview
+2026-04-25 21:39:28,898 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:39:28,993 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 21:39:28,996 - __main__ - INFO - Query processed successfully, tool used: get_class_overview
+2026-04-25 21:39:54,014 - __main__ - INFO - User chat_user sent query: Analyze student S001
+2026-04-25 21:39:54,206 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 21:39:54,207 - __main__ - INFO - Query processed successfully, tool used: analyze_student_behavior
+2026-04-25 21:40:16,160 - __main__ - INFO - User chat_user sent query: Get class overview
+2026-04-25 21:40:16,348 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 21:40:16,351 - __main__ - INFO - Query processed successfully, tool used: get_class_overview
+2026-04-25 21:40:19,390 - __main__ - INFO - User chat_user sent query: Show me at-risk students
+2026-04-25 21:40:19,458 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 21:40:19,462 - __main__ - INFO - Query processed successfully, tool used: identify_at_risk_students
+2026-04-25 21:40:21,807 - __main__ - INFO - User chat_user sent query: Analyze student S001 and create a learning path
+2026-04-25 21:40:21,881 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 21:40:21,882 - __main__ - INFO - Query processed successfully, tool used: none
+2026-04-25 21:45:03,113 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:08,247 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:13,224 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:18,229 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:23,213 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:28,224 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:33,883 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:38,606 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:43,658 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:48,615 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:53,577 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:45:58,592 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:46:03,594 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:46:08,622 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:46:13,604 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:46:18,601 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:46:23,585 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:46:28,877 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:47:04,580 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:47:52,676 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:47:53,266 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:47:58,237 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:03,241 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:05,511 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:08,226 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:13,226 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:18,245 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:23,219 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:28,220 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:33,218 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:38,223 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:43,231 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:48,224 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:53,221 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:48:58,226 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:03,226 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:08,232 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:13,239 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:18,229 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:23,214 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:28,216 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:33,229 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:38,227 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:49:43,218 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:50:07,547 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:50:11,488 - __main__ - INFO - Generating report for student S003
+2026-04-25 21:50:12,575 - __main__ - INFO - Generating report for student S003
+2026-04-25 21:50:15,140 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:50:16,160 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:50:21,999 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:50:40,992 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:51:10,503 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:51:21,160 - __main__ - INFO - Generating report for student S002
+2026-04-25 21:51:30,787 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:51:30,817 - __main__ - INFO - Generating report for student S002
+2026-04-25 21:51:30,845 - __main__ - INFO - Generating report for student S003
+2026-04-25 21:51:40,184 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:52:10,518 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:52:24,724 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:52:43,507 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:53:30,515 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:53:59,333 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:54:01,284 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:54:02,810 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:55:03,480 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:08,705 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:13,566 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:18,565 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:23,662 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:28,604 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:33,634 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:38,855 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:43,942 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:48,563 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:53,617 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:55:58,591 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:03,695 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:08,603 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:13,593 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:18,559 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:23,550 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:28,557 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:33,575 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:38,591 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:43,565 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:48,582 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:53,591 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:56:58,584 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:03,564 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:08,590 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:13,556 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:18,587 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:22,247 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:23,567 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:28,035 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:28,052 - __main__ - INFO - Generating report for student S002
+2026-04-25 21:57:28,064 - __main__ - INFO - Generating report for student S003
+2026-04-25 21:57:28,558 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:33,562 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:38,586 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:43,547 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:48,539 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:53,565 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:57:58,571 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:00,832 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:03,620 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:08,588 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:12,832 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:13,568 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:18,583 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:23,594 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:28,587 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:58:33,574 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:59:30,352 - __main__ - INFO - Generating report for student S001
+2026-04-25 21:59:36,015 - __main__ - INFO - Generating token for user chat_user
+2026-04-25 21:59:40,573 - __main__ - INFO - User chat_user sent query: Get class overview
+2026-04-25 21:59:40,800 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-25 21:59:41,467 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 21:59:41,471 - __main__ - INFO - Query processed successfully, tool used: get_class_overview
+2026-04-25 22:31:22,333 - __main__ - INFO - Generating token for user test_user
+2026-04-25 22:31:24,416 - query_builder - INFO - Saved API Builder config: test_config (ID: 1)
+2026-04-25 22:31:30,584 - query_builder - ERROR - Query execution failed: Invalid or unauthorized column: AVG(marks_achieved_percent) as avg_marks in table student_activity
+2026-04-25 22:31:30,585 - __main__ - WARNING - Invalid saved config: Invalid or unauthorized column: AVG(marks_achieved_percent) as avg_marks in table student_activity
+2026-04-25 22:31:32,660 - query_builder - INFO - Deleted API Builder config: test_config
