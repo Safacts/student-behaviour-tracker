@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Builder - Student Behavior Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .draggable-item {
+            cursor: move;
+            transition: all 0.2s;
+        }
+        .draggable-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .drop-zone {
+            min-height: 100px;
+            border: 2px dashed #cbd5e1;
+            transition: all 0.2s;
+        }
+        .drop-zone.drag-over {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+        .filter-item, .aggregation-item {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen text-slate-900">
+    <!-- Navigation Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-indigo-900">Student Behavior Analytics</h1>
+                    <span class="ml-4 px-3 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">API Builder</span>
+                </div>
+                <nav class="flex space-x-8">
+                    <a href="/" class="text-slate-500 hover:text-indigo-600 transition-colors">Dashboard</a>
+                    <a href="/dashboard" class="text-slate-500 hover:text-indigo-600 transition-colors">Testing</a>
+                    <a href="/agents" class="text-slate-500 hover:text-indigo-600 transition-colors">Agents</a>
+                    <a href="/monitor" class="text-slate-500 hover:text-indigo-600 transition-colors">Monitor</a>
+                    <a href="/docs" class="text-slate-500 hover:text-indigo-600 transition-colors">Integration</a>
+                    <a href="/chat" class="text-slate-500 hover:text-indigo-600 transition-colors">Chat</a>
+                    <a href="/api-builder" class="text-indigo-600 font-semibold border-b-2 border-indigo-600">API Builder</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-indigo-900 mb-2">API Builder</h1>
+            <p class="text-slate-600">Build custom API endpoints with drag-and-drop interface</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Panel - Builder -->
+            <div class="space-y-6">
+                <!-- Data Source Selection -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">1. Select Data Source</h3>
+                    <select id="data-source" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Choose data source...</option>
+                        <option value="students">Students</option>
+                        <option value="student_activity">Student Activity</option>
+                        <option value="intervention_tasks">Intervention Tasks</option>
+                        <option value="monitoring_tasks">Monitoring Tasks</option>
+                    </select>
+                    <div id="available-columns" class="mt-4 hidden">
+                        <h4 class="text-sm font-semibold text-slate-700 mb-2">Available Columns:</h4>
+                        <div id="columns-list" class="flex flex-wrap gap-2">
+                            <!-- Columns will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Builder -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">2. Add Filters</h3>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-3 gap-3">
+                            <select id="filter-column" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                                <option value="">Column...</option>
+                            </select>
+                            <select id="filter-operator" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                                <option value="=">=</option>
+                                <option value="!=">!=</option>
+                                <option value=">">></option>
+                                <option value="<"><</option>
+                                <option value=">=">>=</option>
+                                <option value="<="<</option>
+                                <option value="LIKE">LIKE</option>
+                                <option value="IN">IN</option>
+                            </select>
+                            <input type="text" id="filter-value" placeholder="Value" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                        </div>
+                        <button id="add-filter-btn" class="w-full px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-200 transition-colors">
+                            + Add Filter
+                        </button>
+                    </div>
+                    <div id="filters-list" class="mt-4 space-y-2">
+                        <!-- Filters will be added here -->
+                    </div>
+                </div>
+
+                <!-- Aggregation Builder -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">3. Add Aggregations</h3>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-3 gap-3">
+                            <select id="agg-function" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                                <option value="">Function...</option>
+                                <option value="COUNT">COUNT</option>
+                                <option value="SUM">SUM</option>
+                                <option value="AVG">AVG</option>
+                                <option value="MAX">MAX</option>
+                                <option value="MIN">MIN</option>
+                            </select>
+                            <select id="agg-column" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                                <option value="">Column...</option>
+                            </select>
+                            <input type="text" id="agg-alias" placeholder="Alias (optional)" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                        </div>
+                        <button id="add-agg-btn" class="w-full px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-200 transition-colors">
+                            + Add Aggregation
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Group By:</label>
+                        <select id="group-by" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                            <option value="">No grouping</option>
+                        </select>
+                    </div>
+                    <div id="aggregations-list" class="mt-4 space-y-2">
+                        <!-- Aggregations will be added here -->
+                    </div>
+                </div>
+
+                <!-- Output Format -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">4. Output Format</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" name="output-format" value="json" checked class="text-indigo-600">
+                            <span class="text-sm">JSON</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" name="output-format" value="csv" class="text-indigo-600">
+                            <span class="text-sm">CSV</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Preview & Actions -->
+            <div class="space-y-6">
+                <!-- Query Preview -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Query Preview</h3>
+                    <div id="query-preview" class="code-block text-sm">
+                        SELECT * FROM data_source
+                    </div>
+                </div>
+
+                <!-- Test API -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Test API</h3>
+                    <button id="test-api-btn" class="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors mb-4">
+                        Test Query
+                    </button>
+                    <div id="test-results" class="hidden">
+                        <h4 class="text-sm font-semibold text-slate-700 mb-2">Results:</h4>
+                        <div id="results-preview" class="code-block text-xs max-h-64 overflow-y-auto">
+                            <!-- Results will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Configuration -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Save Configuration</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="config-name" placeholder="Configuration name" class="w-full p-3 bg-white border border-slate-200 rounded-xl">
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="save-config-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                                Save Configuration
+                            </button>
+                            <button id="load-config-btn" class="px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors">
+                                Load Configuration
+                            </button>
+                        </div>
+                    </div>
+                    <div id="saved-configs" class="mt-4">
+                        <h4 class="text-sm font-semibold text-slate-700 mb-2">Saved Configurations:</h4>
+                        <div id="configs-list" class="space-y-2">
+                            <!-- Saved configs will be listed here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Code -->
+                <div class="glass p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Export Code</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button id="export-curl" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors">
+                            cURL
+                        </button>
+                        <button id="export-python" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors">
+                            Python
+                        </button>
+                        <button id="export-js" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors">
+                            JavaScript
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentDataSource = '';
+        let filters = [];
+        let aggregations = [];
+        let groupBy = '';
+
+        // Data source schemas - will be loaded from API
+        let dataSchemas = {};
+
+        // DOM Elements
+        const dataSourceSelect = document.getElementById('data-source');
+        const availableColumnsDiv = document.getElementById('available-columns');
+        const columnsList = document.getElementById('columns-list');
+        const filterColumnSelect = document.getElementById('filter-column');
+        const filterOperatorSelect = document.getElementById('filter-operator');
+        const filterValueInput = document.getElementById('filter-value');
+        const addFilterBtn = document.getElementById('add-filter-btn');
+        const filtersList = document.getElementById('filters-list');
+        const aggFunctionSelect = document.getElementById('agg-function');
+        const aggColumnSelect = document.getElementById('agg-column');
+        const aggAliasInput = document.getElementById('agg-alias');
+        const addAggBtn = document.getElementById('add-agg-btn');
+        const groupBySelect = document.getElementById('group-by');
+        const aggregationsList = document.getElementById('aggregations-list');
+        const queryPreview = document.getElementById('query-preview');
+        const testApiBtn = document.getElementById('test-api-btn');
+        const testResults = document.getElementById('test-results');
+        const resultsPreview = document.getElementById('results-preview');
+        const configNameInput = document.getElementById('config-name');
+        const saveConfigBtn = document.getElementById('save-config-btn');
+        const loadConfigBtn = document.getElementById('load-config-btn');
+        const configsList = document.getElementById('configs-list');
+
+        // Event Listeners
+        dataSourceSelect.addEventListener('change', handleDataSourceChange);
+        addFilterBtn.addEventListener('click', addFilter);
+        addAggBtn.addEventListener('click', addAggregation);
+        groupBySelect.addEventListener('change', handleGroupByChange);
+        testApiBtn.addEventListener('click', testQuery);
+        saveConfigBtn.addEventListener('click', saveConfiguration);
+        loadConfigBtn.addEventListener('click', loadConfiguration);
+        document.getElementById('export-curl').addEventListener('click', () => exportCode('curl'));
+        document.getElementById('export-python').addEventListener('click', () => exportCode('python'));
+        document.getElementById('export-js').addEventListener('click', () => exportCode('js'));
+
+        // Functions
+        function handleDataSourceChange(e) {
+            currentDataSource = e.target.value;
+            if (currentDataSource) {
+                const columns = dataSchemas[currentDataSource];
+                availableColumnsDiv.classList.remove('hidden');
+                columnsList.innerHTML = columns.map(col => 
+                    `<span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">${col}</span>`
+                ).join('');
+                
+                // Update filter and aggregation column selects
+                updateColumnSelects(filterColumnSelect, columns);
+                updateColumnSelects(aggColumnSelect, columns);
+                updateColumnSelects(groupBySelect, columns);
+                
+                updateQueryPreview();
+            } else {
+                availableColumnsDiv.classList.add('hidden');
+            }
+        }
+
+        function updateColumnSelects(select, columns) {
+            select.innerHTML = '<option value="">Column...</option>' + 
+                columns.map(col => `<option value="${col}">${col}</option>`).join('');
+        }
+
+        function addFilter() {
+            const column = filterColumnSelect.value;
+            const operator = filterOperatorSelect.value;
+            const value = filterValueInput.value;
+
+            if (!column || !value) {
+                alert('Please select column and enter value');
+                return;
+            }
+
+            filters.push({ column, operator, value });
+            renderFilters();
+            updateQueryPreview();
+            
+            // Clear inputs
+            filterValueInput.value = '';
+        }
+
+        function renderFilters() {
+            filtersList.innerHTML = filters.map((filter, index) => `
+                <div class="filter-item flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                    <span class="text-sm">
+                        <strong>${filter.column}</strong> ${filter.operator} '${filter.value}'
+                    </span>
+                    <button onclick="removeFilter(${index})" class="text-red-500 hover:text-red-700 text-sm font-semibold">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function removeFilter(index) {
+            filters.splice(index, 1);
+            renderFilters();
+            updateQueryPreview();
+        }
+
+        function addAggregation() {
+            const func = aggFunctionSelect.value;
+            const column = aggColumnSelect.value;
+            const alias = aggAliasInput.value;
+
+            if (!func || !column) {
+                alert('Please select function and column');
+                return;
+            }
+
+            aggregations.push({ function: func, column, alias: alias || column });
+            renderAggregations();
+            updateQueryPreview();
+            
+            // Clear inputs
+            aggAliasInput.value = '';
+        }
+
+        function renderAggregations() {
+            aggregationsList.innerHTML = aggregations.map((agg, index) => `
+                <div class="aggregation-item flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                    <span class="text-sm">
+                        <strong>${agg.function}</strong>(${agg.column}) AS ${agg.alias}
+                    </span>
+                    <button onclick="removeAggregation(${index})" class="text-red-500 hover:text-red-700 text-sm font-semibold">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function removeAggregation(index) {
+            aggregations.splice(index, 1);
+            renderAggregations();
+            updateQueryPreview();
+        }
+
+        function handleGroupByChange(e) {
+            groupBy = e.target.value;
+            updateQueryPreview();
+        }
+
+        function updateQueryPreview() {
+            if (!currentDataSource) {
+                queryPreview.textContent = 'SELECT * FROM data_source';
+                return;
+            }
+
+            let query = 'SELECT ';
+            
+            if (aggregations.length > 0) {
+                query += aggregations.map(agg => `${agg.function}(${agg.column}) AS ${agg.alias}`).join(', ');
+                if (groupBy) {
+                    query += `, ${groupBy}`;
+                }
+            } else {
+                query += '*';
+            }
+            
+            query += ` FROM ${currentDataSource}`;
+            
+            if (filters.length > 0) {
+                query += ' WHERE ' + filters.map(f => `${f.column} ${f.operator} '${f.value}'`).join(' AND ');
+            }
+            
+            if (groupBy) {
+                query += ` GROUP BY ${groupBy}`;
+            }
+            
+            queryPreview.textContent = query;
+        }
+
+        async function testQuery() {
+            if (!currentDataSource) {
+                alert('Please select a data source first');
+                return;
+            }
+
+            testApiBtn.textContent = 'Testing...';
+            testApiBtn.disabled = true;
+
+            try {
+                const payload = {
+                    data_source: currentDataSource,
+                    filters: filters,
+                    aggregations: aggregations,
+                    group_by: groupBy
+                };
+
+                const response = await fetch('/api/query/custom', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                testResults.classList.remove('hidden');
+                
+                if (response.ok) {
+                    resultsPreview.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultsPreview.textContent = `Error: ${data.detail || 'Unknown error'}`;
+                }
+            } catch (err) {
+                testResults.classList.remove('hidden');
+                resultsPreview.textContent = `Error: ${err.message}`;
+            } finally {
+                testApiBtn.textContent = 'Test Query';
+                testApiBtn.disabled = false;
+            }
+        }
+
+        function saveConfiguration() {
+            const name = configNameInput.value;
+            if (!name) {
+                alert('Please enter a configuration name');
+                return;
+            }
+
+            const config = {
+                name,
+                data_source: currentDataSource,
+                filters,
+                aggregations,
+                group_by: groupBy
+            };
+
+            const savedConfigs = JSON.parse(localStorage.getItem('apiBuilderConfigs') || '[]');
+            savedConfigs.push(config);
+            localStorage.setItem('apiBuilderConfigs', JSON.stringify(savedConfigs));
+            
+            renderSavedConfigs();
+            configNameInput.value = '';
+            alert('Configuration saved successfully!');
+        }
+
+        function loadConfiguration() {
+            const name = prompt('Enter configuration name to load:');
+            if (!name) return;
+
+            const savedConfigs = JSON.parse(localStorage.getItem('apiBuilderConfigs') || '[]');
+            const config = savedConfigs.find(c => c.name === name);
+
+            if (config) {
+                currentDataSource = config.data_source;
+                filters = config.filters || [];
+                aggregations = config.aggregations || [];
+                groupBy = config.group_by || '';
+                
+                dataSourceSelect.value = currentDataSource;
+                handleDataSourceChange({ target: dataSourceSelect });
+                renderFilters();
+                renderAggregations();
+                groupBySelect.value = groupBy;
+                updateQueryPreview();
+                
+                alert('Configuration loaded successfully!');
+            } else {
+                alert('Configuration not found');
+            }
+        }
+
+        function renderSavedConfigs() {
+            const savedConfigs = JSON.parse(localStorage.getItem('apiBuilderConfigs') || '[]');
+            configsList.innerHTML = savedConfigs.map(config => `
+                <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                    <span class="text-sm font-medium">${config.name}</span>
+                    <button onclick="loadConfigByName('${config.name}')" class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold">Load</button>
+                </div>
+            `).join('');
+        }
+
+        function loadConfigByName(name) {
+            const savedConfigs = JSON.parse(localStorage.getItem('apiBuilderConfigs') || '[]');
+            const config = savedConfigs.find(c => c.name === name);
+
+            if (config) {
+                currentDataSource = config.data_source;
+                filters = config.filters || [];
+                aggregations = config.aggregations || [];
+                groupBy = config.group_by || '';
+                
+                dataSourceSelect.value = currentDataSource;
+                handleDataSourceChange({ target: dataSourceSelect });
+                renderFilters();
+                renderAggregations();
+                groupBySelect.value = groupBy;
+                updateQueryPreview();
+            }
+        }
+
+        function exportCode(format) {
+            let code = '';
+            const baseUrl = 'http://localhost:8000';
+            
+            switch(format) {
+                case 'curl':
+                    code = `curl -X POST ${baseUrl}/api/query/custom \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify({
+                        data_source: currentDataSource,
+                        filters,
+                        aggregations,
+                        group_by: groupBy
+                    }, null, 2)}'`;
+                    break;
+                case 'python':
+                    code = `import requests\n\nurl = "${baseUrl}/api/query/custom"\npayload = ${JSON.stringify({
+                        data_source: currentDataSource,
+                        filters,
+                        aggregations,
+                        group_by: groupBy
+                    }, null, 2)}\n\nresponse = requests.post(url, json=payload)\nprint(response.json())`;
+                    break;
+                case 'js':
+                    code = `fetch('${baseUrl}/api/query/custom', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify(${JSON.stringify({
+                        data_source: currentDataSource,
+                        filters,
+                        aggregations,
+                        group_by: groupBy
+                    }, null, 2)})\n}).then(r => r.json()).then(console.log);`;
+                    break;
+            }
+            
+            navigator.clipboard.writeText(code).then(() => {
+                alert(`${format.toUpperCase()} code copied to clipboard!`);
+            });
+        }
+
+        // Initialize
+        renderSavedConfigs();
+    </script>
+</body>
+</html>

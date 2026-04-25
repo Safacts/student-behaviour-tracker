@@ -61,6 +61,7 @@ from validators import moderate_validator
 from auth import auth
 from rate_limiter import rate_limiter
 from agent_orchestrator import conversational_router
+from query_builder import QueryBuilderService
 from monitoring import initialize_metrics, app_info
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import logging
@@ -105,6 +106,9 @@ async def verify_auth_token(authorization: str = Header(None), request: Request 
     return user_info["user_id"]
 
 app = FastAPI(title="Student Behavior Analysis PoC")
+
+# Initialize QueryBuilderService
+query_builder = QueryBuilderService()
 
 # Add CORS middleware
 app.add_middleware(
@@ -278,6 +282,32 @@ def get_report(student_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
+
+# API Builder endpoints
+@app.post("/api/query/custom")
+async def custom_query(config: Dict[str, Any], current_user: str = Depends(verify_auth_token)):
+    """Execute custom query built via API Builder"""
+    try:
+        logger.info(f"User {current_user} executing custom query")
+        
+        results = query_builder.execute_query(config)
+        
+        return {
+            "success": True,
+            "data": results,
+            "count": len(results)
+        }
+    except ValueError as e:
+        logger.warning(f"Invalid query configuration: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid query configuration: {str(e)}")
+    except Exception as e:
+        logger.error(f"Custom query failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+
+@app.get("/api/query/tables")
+async def get_allowed_tables(current_user: str = Depends(verify_auth_token)):
+    """Get list of allowed tables and their columns for API Builder UI"""
+    return QueryBuilderService.ALLOWED_TABLES
 
 # Agent endpoints - now fully functional
 
@@ -810,6 +840,14 @@ def read_chat():
 @app.get("/chat.html")
 def read_chat_html():
     return FileResponse("chat.html")
+
+@app.get("/api-builder")
+def read_api_builder():
+    return FileResponse("api-builder.html")
+
+@app.get("/api-builder.html")
+def read_api_builder_html():
+    return FileResponse("api-builder.html")
 
 @app.get("/agents")
 def read_agents():

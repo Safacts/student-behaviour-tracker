@@ -416,3 +416,7 @@
 2026-04-25 21:09:34,015 - __main__ - WARNING - Student daily not found in analysis
 2026-04-25 21:09:36,056 - __main__ - INFO - Generating report for student daily
 2026-04-25 21:09:36,058 - __main__ - WARNING - Student daily not found in analysis
+2026-04-25 21:14:11,357 - __main__ - INFO - Generating weekly report from 2026-04-16 to 2026-04-23, student: None
+2026-04-25 21:14:13,428 - __main__ - INFO - Generating weekly report from 2026-04-16 to 2026-04-23, student: S001
+2026-04-25 21:14:15,472 - __main__ - INFO - Generating daily report for 2026-04-23, student: None
+2026-04-25 21:14:17,529 - __main__ - INFO - Generating daily report for 2026-04-23, student: S001
