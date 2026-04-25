@@ -2,3 +2,7 @@ fastapi
 uvicorn
 google-generativeai
 python-dotenv
+prometheus-client
+groq
+reportlab
+

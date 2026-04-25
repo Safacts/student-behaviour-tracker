@@ -59,6 +59,8 @@ from validators import moderate_validator
 from auth import auth
 from rate_limiter import rate_limiter
 from agent_orchestrator import conversational_router
+from monitoring import initialize_metrics, app_info
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import logging
 
 # Configure logging
@@ -669,8 +671,16 @@ def comprehensive_agent(student_id: str):
         raise HTTPException(status_code=500, detail=f"Comprehensive analysis failed: {str(e)}")
 
 # Serve the index.html
+# Initialize metrics
+initialize_metrics()
+
+@app.get("/metrics")
+def metrics():
+    """Prometheus metrics endpoint"""
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 @app.get("/")
-def read_root():
+def root():
     return FileResponse("index.html")
 
 @app.get("/dashboard")
