@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import sqlite3
+import os
+import pathlib
 
 class ChatRequest(BaseModel):
     query: str
@@ -109,6 +111,12 @@ async def verify_auth_token(authorization: str = Header(None), request: Request 
     return user_info["user_id"]
 
 app = FastAPI(title="Student Behavior Analysis PoC")
+
+# Mount static files directory
+static_dir = pathlib.Path(__file__).parent.parent.parent / "static"
+if not static_dir.exists():
+    static_dir = pathlib.Path.cwd() / "static"
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Initialize QueryBuilderService
 query_builder = QueryBuilderService()

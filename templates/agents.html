@@ -6,37 +6,13 @@
     <title>Agentic AI Framework - Student Behavior Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        .tab-active {
-            border-bottom: 3px solid #4f46e5;
-            color: #4f46e5;
-        }
-        .agent-card {
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        .agent-card:hover {
-            border-color: #4f46e5;
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        .capability-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/main.css">
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen text-slate-900">
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:font-semibold">
+        Skip to main content
+    </a>
     <!-- Navigation Header -->
     <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -57,10 +33,10 @@
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div id="main-content" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <!-- Hero Section -->
         <div class="text-center mb-12">
-            <h1 class="text-4xl font-extrabold text-indigo-900 mb-4">Agentic AI Framework</h1>
+            <h2 class="text-4xl font-extrabold text-indigo-900 mb-4">Agentic AI Framework</h2>
             <p class="text-xl text-slate-600 max-w-3xl mx-auto">Three specialized AI agents working together to provide comprehensive student behavior analysis and intervention strategies</p>
         </div>
 
@@ -99,7 +75,7 @@
                         </ul>
                     </div>
                     
-                    <button onclick="testAgent('behavior')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    <button onclick="testAgent('behavior')" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors" aria-label="Test Behavior Analysis Agent">
                         Test Behavior Agent
                     </button>
                 </div>
@@ -138,7 +114,7 @@
                         </ul>
                     </div>
                     
-                    <button onclick="testAgent('learning')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                    <button onclick="testAgent('learning')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors" aria-label="Test Learning Path Agent">
                         Test Learning Agent
                     </button>
                 </div>
@@ -177,7 +153,7 @@
                         </ul>
                     </div>
                     
-                    <button onclick="testAgent('intervention')" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                    <button onclick="testAgent('intervention')" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors" aria-label="Test Intervention Agent">
                         Test Intervention Agent
                     </button>
                 </div>
@@ -190,8 +166,8 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Select Student</label>
-                    <select id="test-student" class="w-full p-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500">
+                    <label for="test-student" class="block text-sm font-semibold text-slate-700 mb-2">Select Student</label>
+                    <select id="test-student" class="w-full p-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500" aria-label="Select student for testing">
                         <option value="">Choose a student...</option>
                         <option value="S001">Alex (S001)</option>
                         <option value="S002">Bella (S002)</option>
@@ -199,8 +175,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Analysis Type</label>
-                    <select id="test-type" class="w-full p-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500">
+                    <label for="test-type" class="block text-sm font-semibold text-slate-700 mb-2">Analysis Type</label>
+                    <select id="test-type" class="w-full p-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-500" aria-label="Select analysis type">
                         <option value="comprehensive">Comprehensive Analysis (All Agents)</option>
                         <option value="behavior">Behavior Analysis Only</option>
                         <option value="learning">Learning Path Only</option>
@@ -210,10 +186,10 @@
             </div>
             
             <div class="flex space-x-4">
-                <button onclick="runAgentTest()" class="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+                <button onclick="runAgentTest()" class="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors" aria-label="Run comprehensive agent analysis">
                     Run Agent Analysis
                 </button>
-                <button onclick="clearResults()" class="px-6 py-3 bg-slate-600 text-white rounded-xl font-semibold hover:bg-slate-700 transition-colors">
+                <button onclick="clearResults()" class="px-6 py-3 bg-slate-600 text-white rounded-xl font-semibold hover:bg-slate-700 transition-colors" aria-label="Clear analysis results">
                     Clear Results
                 </button>
             </div>
@@ -322,6 +298,14 @@
                     showNotification(`Agent test failed: ${data.detail}`, 'error');
                 }
             } catch (error) {
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = `Error testing agent: ${error.message}`;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
                 showNotification(`Error testing agent: ${error.message}`, 'error');
             } finally {
                 button.textContent = originalText;
