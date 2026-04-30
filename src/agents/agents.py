@@ -6,14 +6,14 @@ These tools can be called by AI agents to perform actions
 import sqlite3
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-from analyzer import analyze_student
-from llm_service import generate_parent_report
+from src.services.analyzer import analyze_student
+from src.services.llm_service import generate_parent_report
+from src.models.task_manager import task_manager, teacher_assignment_manager
+from src.core.validators import moderate_validator
+from src.core.auth import auth
 from groq import Groq
 import os
 from dotenv import load_dotenv
-from task_manager import task_manager, teacher_assignment_manager
-from validators import moderate_validator
-from auth import auth
 
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")

@@ -22,7 +22,7 @@ class ToolRegistry:
     
     def _initialize_tools(self):
         """Initialize all available tools with descriptions"""
-        from agents import (
+        from src.agents.agents import (
             analyze_student_behavior,
             create_learning_path,
             suggest_intervention,
