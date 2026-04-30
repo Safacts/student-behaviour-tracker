@@ -470,22 +470,39 @@ python main.py
         // Event listeners
         function setupEventListeners() {
             const tabs = ['monitor', 'apis', 'troubleshoot', 'health'];
+            const tabButtons = [];
             tabs.forEach(tab => {
                 const tabBtn = document.getElementById(`tab-${tab}`);
                 const view = document.getElementById(`view-${tab}`);
-                
+                tabButtons.push(tabBtn);
+
                 tabBtn.addEventListener('click', () => {
                     // Update tabs
                     document.querySelectorAll('[id^="tab-"]').forEach(btn => {
                         btn.classList.remove('tab-active');
                         btn.classList.add('text-slate-400');
+                        btn.setAttribute('aria-selected', 'false');
                     });
                     tabBtn.classList.add('tab-active');
                     tabBtn.classList.remove('text-slate-400');
-                    
+                    tabBtn.setAttribute('aria-selected', 'true');
+
                     // Update views
                     document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
                     view.classList.remove('hidden');
+                });
+
+                // Keyboard navigation
+                tabBtn.addEventListener('keydown', (e) => {
+                    const currentIndex = tabButtons.indexOf(tabBtn);
+
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        const direction = e.key === 'ArrowRight' ? 1 : -1;
+                        const nextIndex = (currentIndex + direction + tabButtons.length) % tabButtons.length;
+                        tabButtons[nextIndex].focus();
+                        tabButtons[nextIndex].click();
+                    }
                 });
             });
         }

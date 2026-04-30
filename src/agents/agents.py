@@ -742,19 +742,44 @@ def generate_parent_email(student_id: str, email_type: str = "report") -> Dict[s
             # Generate weekly/monthly report email
             subject = f"Student Progress Report - {student_name} ({student_id})"
             
+            # Get subject performance data
+            subject_performance = analysis.get('subject_performance', {})
+            weak_subjects = analysis.get('weak_subjects', [])
+            strong_subjects = analysis.get('strong_subjects', [])
+            
+            # Build subject breakdown
+            subject_breakdown = ""
+            if subject_performance:
+                subject_breakdown = "\nSUBJECT PERFORMANCE\n-------------------\n"
+                for subject, marks in subject_performance.items():
+                    status = "✅ Doing well" if marks >= 75 else "⚠️ Needs focus" if marks < 50 else "📊 On track"
+                    subject_breakdown += f"{subject}: {marks}% ({status})\n"
+            
+            # Build strengths and concerns
+            strengths = ""
+            if strong_subjects:
+                strengths = f"\nSTRENGTHS\n---------\n• Strong performance in: {', '.join(strong_subjects)}\n"
+            
+            concerns = ""
+            if weak_subjects:
+                concerns = f"\nAREAS NEEDING ATTENTION\n-----------------------\n• Needs focus in: {', '.join(weak_subjects)}\n"
+            
             body = f"""
 Dear Parent/Guardian,
 
 This is an automated progress report for {student_name} ({student_id}).
+
+STATUS: {analysis.get('behavioral_tag', 'Unknown')}
 
 PERFORMANCE SUMMARY
 -------------------
 Average Marks: {analysis.get('avg_marks', 0):.2f}%
 Average Distraction Score: {analysis.get('avg_distraction', 0):.2f}/10
 Total Study Time: {analysis.get('total_study_time', 0)} minutes
-Behavioral Tag: {analysis.get('behavioral_tag', 'Unknown')}
 Recent Activity Trend: {analysis.get('marks_trend', 0):.2f}%
-
+{subject_breakdown}
+{strengths}
+{concerns}
 KEY OBSERVATIONS
 ---------------
 The student's current behavioral pattern indicates: {analysis.get('behavioral_tag', 'Unknown')}

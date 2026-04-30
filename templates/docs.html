@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="/static/css/main.css">
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen text-slate-900">
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:font-semibold">
+        Skip to main content
+    </a>
     <!-- Navigation Header -->
     <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,24 +33,24 @@
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div id="main-content" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <!-- Hero Section -->
         <div class="text-center mb-12">
-            <h1 class="text-4xl font-extrabold text-indigo-900 mb-4">Integration Documentation</h1>
+            <h2 class="text-4xl font-extrabold text-indigo-900 mb-4">Integration Documentation</h2>
             <p class="text-xl text-slate-600 max-w-3xl mx-auto">Complete guide for integrating Student Behavior Analytics microservice into your existing project</p>
         </div>
 
         <!-- Tab Navigation -->
-        <div class="flex justify-center space-x-6 mb-8 border-b border-slate-200">
-            <button id="tab-overview" class="pb-3 text-sm font-bold uppercase tracking-widest tab-active transition-all">Overview</button>
-            <button id="tab-apis" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">API Reference</button>
-            <button id="tab-agents" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Agents</button>
-            <button id="tab-examples" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Examples</button>
-            <button id="tab-deployment" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Deployment</button>
+        <div class="flex justify-center space-x-6 mb-8 border-b border-slate-200" role="tablist" aria-label="Documentation tabs">
+            <button id="tab-overview" class="pb-3 text-sm font-bold uppercase tracking-widest tab-active transition-all" role="tab" aria-selected="true" aria-controls="view-overview">Overview</button>
+            <button id="tab-apis" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all" role="tab" aria-selected="false" aria-controls="view-apis">API Reference</button>
+            <button id="tab-agents" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all" role="tab" aria-selected="false" aria-controls="view-agents">Agents</button>
+            <button id="tab-examples" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all" role="tab" aria-selected="false" aria-controls="view-examples">Examples</button>
+            <button id="tab-deployment" class="pb-3 text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all" role="tab" aria-selected="false" aria-controls="view-deployment">Deployment</button>
         </div>
 
         <!-- Overview Tab -->
-        <div id="view-overview">
+        <div id="view-overview" role="tabpanel" aria-labelledby="tab-overview">
             <div class="glass p-8 rounded-2xl shadow-lg mb-8">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6">System Overview</h2>
                 
@@ -142,7 +146,7 @@
         </div>
 
         <!-- API Reference Tab -->
-        <div id="view-apis" class="hidden">
+        <div id="view-apis" class="hidden" role="tabpanel" aria-labelledby="tab-apis">
             <div class="space-y-8">
                 <!-- Core APIs -->
                 <div class="glass p-8 rounded-2xl shadow-lg">
@@ -703,7 +707,7 @@
         </div>
 
         <!-- Agents Tab -->
-        <div id="view-agents" class="hidden">
+        <div id="view-agents" class="hidden" role="tabpanel" aria-labelledby="tab-agents">
             <div class="glass p-8 rounded-2xl shadow-lg">
                 <h3 class="text-2xl font-bold text-slate-800 mb-6">Agent Capabilities</h3>
                 
@@ -781,7 +785,7 @@
         </div>
 
         <!-- Examples Tab -->
-        <div id="view-examples" class="hidden">
+        <div id="view-examples" class="hidden" role="tabpanel" aria-labelledby="tab-examples">
             <div class="space-y-8">
                 <!-- JavaScript Example -->
                 <div class="glass p-8 rounded-2xl shadow-lg">
@@ -992,7 +996,7 @@ export default StudentDashboard;</div>
         </div>
 
         <!-- Deployment Tab -->
-        <div id="view-deployment" class="hidden">
+        <div id="view-deployment" class="hidden" role="tabpanel" aria-labelledby="tab-deployment">
             <div class="space-y-8">
                 <!-- Local Development -->
                 <div class="glass p-8 rounded-2xl shadow-lg">
@@ -1010,7 +1014,7 @@ export default StudentDashboard;</div>
                         <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                             <h4 class="font-semibold text-blue-800 mb-2">🚀 Quick Start</h4>
                             <div class="code-block text-sm">
-                                <button class="copy-btn" onclick="copyToClipboard('# Clone or download the project\\ngit clone https://github.com/your-repo/student-behavior-analytics\\ncd student-behavior-analytics\\n\\n# Install dependencies\\npip install -r requirements.txt\\n\\n# Set environment variables\\nexport OPENAI_API_KEY="your-api-key"\\n\\n# Start the service\\npython main.py')">Copy</button>
+                                <button class="copy-btn" onclick="copyToClipboard('# Clone or download the project\ngit clone https://github.com/your-repo/student-behavior-analytics\ncd student-behavior-analytics\n\n# Install dependencies\npip install -r requirements.txt\n\n# Set environment variables\nexport OPENAI_API_KEY=&quot;your-api-key&quot;\n\n# Start the service\npython main.py')">Copy</button>
                                 # Clone or download the project
 git clone https://github.com/your-repo/student-behavior-analytics
 cd student-behavior-analytics
@@ -1044,7 +1048,7 @@ python main.py
                         <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg">
                             <h4 class="font-semibold text-purple-800 mb-2">🌐 Docker Deployment</h4>
                             <div class="code-block text-sm">
-                                <button class="copy-btn" onclick="copyToClipboard('# Build Docker image\\ndocker build -t student-behavior-analytics .\\n\\n# Run container\\ndocker run -p 8000:8000 -e OPENAI_API_KEY=your-key student-behavior-analytics')">Copy</button>
+                                <button class="copy-btn" onclick="copyToClipboard('# Build Docker image\ndocker build -t student-behavior-analytics .\n\n# Run container\ndocker run -p 8000:8000 -e OPENAI_API_KEY=your-key student-behavior-analytics')">Copy</button>
                                 # Build Docker image
 docker build -t student-behavior-analytics .
 
@@ -1085,19 +1089,35 @@ docker run -p 8000:8000 -e OPENAI_API_KEY=your-key student-behavior-analytics
         tabs.forEach(tab => {
             const tabBtn = document.getElementById(`tab-${tab}`);
             const view = document.getElementById(`view-${tab}`);
-            
+
             tabBtn.addEventListener('click', () => {
                 // Update tabs
                 document.querySelectorAll('[id^="tab-"]').forEach(btn => {
                     btn.classList.remove('tab-active');
                     btn.classList.add('text-slate-400');
+                    btn.setAttribute('aria-selected', 'false');
                 });
                 tabBtn.classList.add('tab-active');
                 tabBtn.classList.remove('text-slate-400');
-                
+                tabBtn.setAttribute('aria-selected', 'true');
+
                 // Update views
                 document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
                 view.classList.remove('hidden');
+            });
+
+            // Keyboard navigation
+            tabBtn.addEventListener('keydown', (e) => {
+                const tabButtons = Array.from(document.querySelectorAll('[id^="tab-"]'));
+                const currentIndex = tabButtons.indexOf(tabBtn);
+
+                if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    const direction = e.key === 'ArrowRight' ? 1 : -1;
+                    const nextIndex = (currentIndex + direction + tabButtons.length) % tabButtons.length;
+                    tabButtons[nextIndex].focus();
+                    tabButtons[nextIndex].click();
+                }
             });
         });
 

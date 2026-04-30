@@ -1,0 +1,48 @@
+2026-04-30 21:56:07,165 - src.api.main - INFO - Generating report for student S002
+2026-04-30 21:56:10,996 - src.api.main - INFO - Generating report for student S003
+2026-04-30 21:56:18,845 - src.api.main - INFO - Generating report for student S001
+2026-04-30 21:56:22,810 - src.api.main - INFO - Generating report for student S001
+2026-04-30 21:56:53,061 - src.api.main - INFO - Generating report for student S001
+2026-04-30 21:57:22,767 - src.api.main - INFO - Generating report for student S001
+2026-04-30 21:57:53,082 - src.api.main - INFO - Generating report for student S001
+2026-04-30 21:58:22,767 - src.api.main - INFO - Generating report for student S001
+2026-04-30 21:58:53,364 - src.api.main - INFO - Generating report for student S001
+2026-04-30 21:59:18,742 - src.api.main - INFO - Generating token for user test_parent_report
+2026-04-30 21:59:22,771 - src.api.main - INFO - Generating report for student S001
+2026-04-30 21:59:22,833 - src.api.main - INFO - User test_parent_report (role: parent) sent query: Send a parent report for student S001
+2026-04-30 21:59:23,982 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-30 21:59:25,041 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-30 21:59:25,043 - src.api.main - INFO - Query processed successfully, tool used: generate_parent_email
+2026-04-30 21:59:53,058 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:00:30,772 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:01:31,092 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:02:31,087 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:03:07,447 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:03:18,947 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:03:30,766 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:04:22,088 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:04:30,764 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:05:31,067 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:06:30,770 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:06:51,357 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:06:56,877 - src.api.main - INFO - Generating report for student S002
+2026-04-30 22:06:59,620 - src.api.main - INFO - Generating report for student S003
+2026-04-30 22:07:31,067 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:08:30,776 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:09:31,061 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:09:56,336 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:09:56,390 - src.api.main - WARNING - Missing authorization header
+2026-04-30 22:10:11,512 - src.api.main - INFO - Generating report for student S003
+2026-04-30 22:10:11,528 - src.api.main - WARNING - Missing authorization header
+2026-04-30 22:10:30,778 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:11:00,796 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:11:21,223 - src.api.main - INFO - Generating weekly report from 2025-09-03 to 2026-04-30, student: None
+2026-04-30 22:11:30,713 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:11:30,775 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:11:44,780 - src.api.main - INFO - Generating daily report for 2026-04-30, student: None
+2026-04-30 22:11:53,146 - src.api.main - INFO - Generating daily report for 2025-11-13, student: None
+2026-04-30 22:12:03,596 - src.api.main - INFO - Generating report for student S002
+2026-04-30 22:12:03,619 - src.api.main - WARNING - Missing authorization header
+2026-04-30 22:12:30,761 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:13:31,062 - src.api.main - INFO - Generating report for student S001
+2026-04-30 22:14:30,774 - src.api.main - INFO - Generating report for student S001

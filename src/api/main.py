@@ -794,6 +794,71 @@ def get_parent_email(student_id: str, email_type: str = "report"):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Email generation failed: {str(e)}")
 
+@app.get("/api/parent/report/{student_id}")
+def get_parent_report(student_id: str):
+    """Get comprehensive parent dashboard report with subject breakdown"""
+    try:
+        from src.agents.agents import analyze_student_behavior, get_student_info
+        
+        analysis = analyze_student_behavior(student_id)
+        
+        if "error" in analysis:
+            raise HTTPException(status_code=404, detail="Student not found")
+        
+        student_info = get_student_info(student_id)
+        
+        # Determine status color
+        behavioral_tag = analysis.get('behavioral_tag', 'Unknown')
+        if behavioral_tag == "On Track":
+            status_color = "green"
+            status_label = "On Track"
+        elif behavioral_tag == "High Flight Risk":
+            status_color = "red"
+            status_label = "Needs Attention"
+        else:
+            status_color = "yellow"
+            status_label = "Monitor"
+        
+        # Build subject performance list
+        subject_performance = analysis.get('subject_performance', {})
+        subject_list = []
+        for subject, marks in subject_performance.items():
+            if marks >= 75:
+                status = "Doing well"
+            elif marks < 50:
+                status = "Needs focus"
+            else:
+                status = "On track"
+            subject_list.append({
+                "subject": subject,
+                "marks": marks,
+                "status": status
+            })
+        
+        return {
+            "student_id": student_id,
+            "student_name": student_info.get("name", "Student"),
+            "status": {
+                "label": status_label,
+                "color": status_color,
+                "behavioral_tag": behavioral_tag
+            },
+            "performance_summary": {
+                "avg_marks": analysis.get('avg_marks', 0),
+                "avg_distraction": analysis.get('avg_distraction', 0),
+                "total_study_time": analysis.get('total_study_time', 0),
+                "marks_trend": analysis.get('marks_trend', 0)
+            },
+            "subject_performance": subject_list,
+            "strengths": analysis.get('strong_subjects', []),
+            "concerns": analysis.get('weak_subjects', []),
+            "recent_activities_count": analysis.get('recent_activities_count', 0)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+
 @app.get("/api/communication/staff-notification/{student_id}")
 def get_staff_notification(student_id: str, notification_type: str = "intervention"):
     """Generate notification content for staff/teachers"""

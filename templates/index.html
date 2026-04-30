@@ -79,20 +79,42 @@
                     </div>
                 </div>
 
-                <!-- AI Report -->
+                <!-- AI Summary (Real Groq AI) -->
                 <div class="bg-indigo-900 text-white p-8 rounded-3xl shadow-2xl relative overflow-hidden">
                     <div class="relative z-10">
                         <div class="flex items-center gap-3 mb-4">
                             <span class="bg-indigo-500 p-2 rounded-lg">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
                             </span>
-                            <h2 class="text-xl font-bold">AI Parental Recommendation</h2>
+                            <h2 class="text-xl font-bold">AI-Powered Insights</h2>
                         </div>
-                        <p id="ai-report" class="text-lg leading-relaxed text-indigo-100 italic">
-                            Select a student to generate a report.
+                        <p id="ai-summary" class="text-lg leading-relaxed text-indigo-100 italic">
+                            Select a student to generate AI insights.
                         </p>
                     </div>
                     <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-indigo-800 rounded-full opacity-50 blur-3xl"></div>
+                </div>
+
+                <!-- Parent Dashboard Report -->
+                <div id="parent-dashboard" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+                    <div class="p-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold">Parent Dashboard</h2>
+                                <p class="text-indigo-100 text-sm mt-1">Weekly progress report</p>
+                            </div>
+                            <div id="status-badge" class="hidden px-4 py-2 rounded-full text-sm font-bold bg-white/20">
+                                Loading...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="dashboard-content" class="p-6">
+                        <div class="text-center py-8 text-slate-400">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <p>Select a student to view their report</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -139,7 +161,10 @@
             statTime: document.getElementById('stat-time'),
             statMarks: document.getElementById('stat-marks'),
             statTag: document.getElementById('stat-tag'),
-            aiReport: document.getElementById('ai-report')
+            aiSummary: document.getElementById('ai-summary'),
+            parentDashboard: document.getElementById('parent-dashboard'),
+            dashboardContent: document.getElementById('dashboard-content'),
+            statusBadge: document.getElementById('status-badge')
         };
 
         // Simple response cache
@@ -171,24 +196,35 @@
             };
         }
 
-        // Tab Switching
-        DOM.tabInsights.addEventListener('click', () => {
-            DOM.tabInsights.classList.add('tab-active');
-            DOM.tabInsights.classList.remove('text-slate-400');
-            DOM.tabRaw.classList.remove('tab-active');
-            DOM.tabRaw.classList.add('text-slate-400');
-            DOM.viewInsights.classList.remove('hidden');
-            DOM.viewRaw.classList.add('hidden');
-        });
+        // Tab switching
+        const tabs = [DOM.tabInsights, DOM.tabRaw];
+        const views = [DOM.viewInsights, DOM.viewRaw];
 
-        DOM.tabRaw.addEventListener('click', () => {
-            DOM.tabRaw.classList.add('tab-active');
-            DOM.tabRaw.classList.remove('text-slate-400');
-            DOM.tabInsights.classList.remove('tab-active');
-            DOM.tabInsights.classList.add('text-slate-400');
-            DOM.viewRaw.classList.remove('hidden');
-            DOM.viewInsights.classList.add('hidden');
-            fetchRawData();
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('tab-active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+                tab.classList.add('tab-active');
+                tab.setAttribute('aria-selected', 'true');
+
+                views.forEach(v => v.classList.add('hidden'));
+                views[index].classList.remove('hidden');
+            });
+
+            // Keyboard navigation
+            tab.addEventListener('keydown', (e) => {
+                const currentIndex = tabs.indexOf(tab);
+
+                if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    const direction = e.key === 'ArrowRight' ? 1 : -1;
+                    const nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
+                    tabs[nextIndex].focus();
+                    tabs[nextIndex].click();
+                }
+            });
         });
 
         // Fetch student list
@@ -264,21 +300,22 @@
                 
                 const activityCell = document.createElement('td');
                 activityCell.className = 'px-6 py-4 text-slate-600';
-                activityCell.textContent = log.activity_type;
+                activityCell.textContent = log.activity_type || log.activity || 'N/A';
                 
                 const timeCell = document.createElement('td');
                 timeCell.className = 'px-6 py-4';
-                timeCell.textContent = log.time_spent_mins;
+                timeCell.textContent = log.time_spent_mins || log.time_spent || 0;
                 
                 const scoreCell = document.createElement('td');
                 scoreCell.className = 'px-6 py-4';
-                scoreCell.textContent = `${log.marks_achieved_percent}%`;
+                scoreCell.textContent = `${log.marks_achieved_percent || log.marks || 0}%`;
                 
                 const distractionCell = document.createElement('td');
                 distractionCell.className = 'px-6 py-4';
                 const distractionSpan = document.createElement('span');
-                distractionSpan.className = `px-2 py-0.5 rounded text-[10px] font-bold ${log.distraction_score > 7 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}`;
-                distractionSpan.textContent = `${log.distraction_score}/10`;
+                const distractionScore = log.distraction_score || log.distraction || 0;
+                distractionSpan.className = `px-2 py-0.5 rounded text-[10px] font-bold ${distractionScore > 7 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}`;
+                distractionSpan.textContent = `${distractionScore}/10`;
                 distractionCell.appendChild(distractionSpan);
                 
                 const dateCell = document.createElement('td');
@@ -309,6 +346,8 @@
                 const cached = getCached(cacheKey);
                 if (cached) {
                     updateReportUI(cached);
+                    updateParentDashboard(studentId);
+                    updateAISummary(studentId);
                     return;
                 }
 
@@ -321,6 +360,8 @@
                 const data = await response.json();
                 setCache(cacheKey, data);
                 updateReportUI(data);
+                updateParentDashboard(studentId);
+                updateAISummary(studentId);
             } catch (err) {
                 console.error("Error fetching report", err);
                 DOM.loading.classList.add('hidden');
@@ -335,6 +376,162 @@
                 alert(`Error: Failed to load student report. ${err.message}`);
             }
         });
+
+        // Fetch parent dashboard data
+        async function updateParentDashboard(studentId) {
+            if (!studentId) return;
+
+            DOM.dashboardContent.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div><p class="mt-2 text-slate-400">Loading report...</p></div>';
+            DOM.statusBadge.classList.remove('hidden');
+            DOM.statusBadge.textContent = 'Loading...';
+
+            try {
+                const cacheKey = `parent-report-${studentId}`;
+                const cached = getCached(cacheKey);
+                if (cached) {
+                    renderParentDashboard(cached);
+                    return;
+                }
+
+                const response = await fetch(`/api/parent/report/${studentId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                setCache(cacheKey, data);
+                renderParentDashboard(data);
+            } catch (err) {
+                console.error("Error fetching parent report", err);
+                DOM.dashboardContent.innerHTML = '<div class="text-center py-8 text-red-400"><p>Error loading parent report</p></div>';
+                DOM.statusBadge.classList.add('hidden');
+            }
+        }
+
+        function renderParentDashboard(data) {
+            // Update status badge
+            DOM.statusBadge.classList.remove('hidden');
+            const statusColor = data.status.color === 'green' ? 'bg-green-500' : 
+                               data.status.color === 'red' ? 'bg-red-500' : 'bg-yellow-500';
+            DOM.statusBadge.className = `px-4 py-2 rounded-full text-sm font-bold ${statusColor} text-white`;
+            DOM.statusBadge.textContent = data.status.label;
+
+            // Build subject performance HTML
+            let subjectHtml = '';
+            if (data.subject_performance && data.subject_performance.length > 0) {
+                subjectHtml = '<div class="mb-6"><h3 class="text-lg font-bold text-slate-800 mb-3">Subject Performance</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+                data.subject_performance.forEach(subj => {
+                    const statusColor = subj.status === 'Doing well' ? 'bg-green-100 text-green-700' : 
+                                       subj.status === 'Needs focus' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700';
+                    subjectHtml += `
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                            <span class="font-medium text-slate-700">${subj.subject}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-800">${subj.marks}%</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold ${statusColor}">${subj.status}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                subjectHtml += '</div></div>';
+            }
+
+            // Build strengths/concerns HTML
+            let strengthsHtml = '';
+            if (data.strengths && data.strengths.length > 0) {
+                strengthsHtml = '<div class="mb-6"><h3 class="text-lg font-bold text-slate-800 mb-3">What\'s Going Well</h3><ul class="space-y-2">';
+                data.strengths.forEach(strength => {
+                    strengthsHtml += `<li class="flex items-start gap-2 text-slate-600"><span class="text-green-500 mt-0.5">✓</span>${strength}</li>`;
+                });
+                strengthsHtml += '</ul></div>';
+            }
+
+            let concernsHtml = '';
+            if (data.concerns && data.concerns.length > 0) {
+                concernsHtml = '<div class="mb-6"><h3 class="text-lg font-bold text-slate-800 mb-3">Areas to Watch</h3><ul class="space-y-2">';
+                data.concerns.forEach(concern => {
+                    concernsHtml += `<li class="flex items-start gap-2 text-slate-600"><span class="text-amber-500 mt-0.5">⚠</span>${concern}</li>`;
+                });
+                concernsHtml += '</ul></div>';
+            }
+
+            // Build progress trends HTML
+            const trendIcon = data.performance_summary.marks_trend >= 0 ? '↑' : '↓';
+            const trendColor = data.performance_summary.marks_trend >= 0 ? 'text-green-600' : 'text-red-600';
+            const progressHtml = `
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-3">Progress This Week</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="p-3 bg-slate-50 rounded-lg text-center">
+                            <p class="text-xs text-slate-500 mb-1">Overall</p>
+                            <p class="text-lg font-bold text-slate-800">${data.performance_summary.avg_marks}%</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg text-center">
+                            <p class="text-xs text-slate-500 mb-1">Study Time</p>
+                            <p class="text-lg font-bold text-slate-800">${Math.round(data.performance_summary.total_study_time / 60)}h</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg text-center">
+                            <p class="text-xs text-slate-500 mb-1">Trend</p>
+                            <p class="text-lg font-bold ${trendColor}">${trendIcon} ${Math.abs(data.performance_summary.marks_trend)}%</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Combine all sections
+            DOM.dashboardContent.innerHTML = `
+                ${subjectHtml}
+                ${strengthsHtml}
+                ${concernsHtml}
+                ${progressHtml}
+                <div class="mt-6 p-4 bg-indigo-50 rounded-lg">
+                    <h3 class="text-sm font-bold text-indigo-800 mb-2">What You Can Do</h3>
+                    <p class="text-sm text-indigo-700">Review the areas above and encourage your child to focus on subjects that need attention. Consistent daily practice helps improve performance.</p>
+                </div>
+            `;
+        }
+
+        // Fetch AI summary using Groq
+        async function updateAISummary(studentId) {
+            if (!studentId) return;
+
+            DOM.aiSummary.textContent = 'Generating AI insights...';
+
+            try {
+                const cacheKey = `ai-summary-${studentId}`;
+                const cached = getCached(cacheKey);
+                if (cached) {
+                    DOM.aiSummary.textContent = cached;
+                    return;
+                }
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: `Provide a 2-sentence AI-powered insight about student ${studentId}'s performance, behavioral patterns, and specific recommendations based on their data.`,
+                        use_llm: true,
+                        role: 'faculty'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.natural_language_response) {
+                    DOM.aiSummary.textContent = data.natural_language_response;
+                    setCache(cacheKey, data.natural_language_response);
+                } else {
+                    DOM.aiSummary.textContent = 'Unable to generate AI insights at this time.';
+                }
+            } catch (err) {
+                console.error("Error fetching AI summary", err);
+                DOM.aiSummary.textContent = 'Error loading AI insights.';
+            }
+        }
 
         function updateReportUI(data) {
             if (!data.analysis) {
@@ -354,13 +551,6 @@
             } else {
                 DOM.statTag.classList.add('bg-green-100', 'text-green-700');
             }
-
-            const recommendations = {
-                'High Flight Risk': 'Student shows high distraction levels and declining performance. Immediate intervention recommended with focus on study habits and engagement.',
-                'Concept Comprehension Issue': 'Student struggles with understanding concepts despite good focus. Consider additional learning resources and concept review sessions.',
-                'On Track': 'Student is performing well and maintaining good study habits. Continue current approach and monitor progress.'
-            };
-            DOM.aiReport.textContent = recommendations[data.analysis.behavioral_tag] || 'No specific recommendation available.';
 
             DOM.loading.classList.add('hidden');
             DOM.reportContainer.classList.remove('hidden');

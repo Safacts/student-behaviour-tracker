@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="/static/css/main.css">
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-indigo-50 min-h-screen text-slate-900">
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:font-semibold">
+        Skip to main content
+    </a>
     <!-- Navigation Header -->
     <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,10 +34,10 @@
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div id="main-content" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-extrabold text-indigo-900 mb-2">API Builder</h1>
+            <h2 class="text-4xl font-extrabold text-indigo-900 mb-2">API Builder</h2>
             <p class="text-slate-600">Build custom API endpoints with AI or drag-and-drop interface</p>
         </div>
 
@@ -43,15 +47,17 @@
                 <span class="text-2xl">🤖</span> AI-Powered Query Builder
             </h3>
             <div class="space-y-3">
-                <textarea 
-                    id="ai-query-input" 
+                <textarea
+                    id="ai-query-input"
                     placeholder="Describe what you want in plain English... (e.g., 'Show me average marks by subject for students with distraction score above 5')"
                     class="w-full p-4 bg-white border border-slate-200 rounded-xl text-sm resize-none focus:ring-2 focus:ring-indigo-500"
                     rows="3"
+                    aria-label="Describe your API query in plain English"
                 ></textarea>
-                <button 
+                <button
                     id="ai-build-btn"
                     class="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center justify-center gap-2"
+                    aria-label="Generate API query using AI"
                 >
                     <span>✨</span> Generate Query with AI
                 </button>
@@ -63,8 +69,9 @@
             <div class="space-y-6">
                 <!-- Data Source Selection -->
                 <div class="glass p-6 rounded-2xl shadow-lg">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4">1. Select Data Source</h3>
-                    <select id="data-source" class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Data Source</h3>
+                    <label for="data-source" class="sr-only">Select data source</label>
+                    <select id="data-source" class="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" aria-label="Select data source">
                         <option value="">Choose data source...</option>
                         <option value="students">Students</option>
                         <option value="student_activity">Student Activity</option>
@@ -84,10 +91,12 @@
                     <h3 class="text-lg font-bold text-slate-800 mb-4">2. Add Filters</h3>
                     <div class="space-y-3">
                         <div class="grid grid-cols-3 gap-3">
-                            <select id="filter-column" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                            <label for="filter-column" class="sr-only">Filter column</label>
+                            <select id="filter-column" class="p-2 bg-white border border-slate-200 rounded-lg text-sm" aria-label="Select column to filter">
                                 <option value="">Column...</option>
                             </select>
-                            <select id="filter-operator" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                            <label for="filter-operator" class="sr-only">Filter operator</label>
+                            <select id="filter-operator" class="p-2 bg-white border border-slate-200 rounded-lg text-sm" aria-label="Select filter operator">
                                 <option value="=">=</option>
                                 <option value="!=">!=</option>
                                 <option value=">">></option>
@@ -97,9 +106,10 @@
                                 <option value="LIKE">LIKE</option>
                                 <option value="IN">IN</option>
                             </select>
-                            <input type="text" id="filter-value" placeholder="Value" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                            <label for="filter-value" class="sr-only">Filter value</label>
+                            <input type="text" id="filter-value" placeholder="Value" class="p-2 bg-white border border-slate-200 rounded-lg text-sm" aria-label="Enter filter value">
                         </div>
-                        <button id="add-filter-btn" class="w-full px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-200 transition-colors">
+                        <button id="add-filter-btn" class="w-full px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-200 transition-colors" aria-label="Add filter to query">
                             + Add Filter
                         </button>
                     </div>
@@ -113,7 +123,8 @@
                     <h3 class="text-lg font-bold text-slate-800 mb-4">3. Add Aggregations</h3>
                     <div class="space-y-3">
                         <div class="grid grid-cols-3 gap-3">
-                            <select id="agg-function" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                            <label for="agg-function" class="sr-only">Aggregation function</label>
+                            <select id="agg-function" class="p-2 bg-white border border-slate-200 rounded-lg text-sm" aria-label="Select aggregation function">
                                 <option value="">Function...</option>
                                 <option value="COUNT">COUNT</option>
                                 <option value="SUM">SUM</option>
@@ -121,18 +132,20 @@
                                 <option value="MAX">MAX</option>
                                 <option value="MIN">MIN</option>
                             </select>
-                            <select id="agg-column" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                            <label for="agg-column" class="sr-only">Aggregation column</label>
+                            <select id="agg-column" class="p-2 bg-white border border-slate-200 rounded-lg text-sm" aria-label="Select column for aggregation">
                                 <option value="">Column...</option>
                             </select>
-                            <input type="text" id="agg-alias" placeholder="Alias (optional)" class="p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                            <label for="agg-alias" class="sr-only">Aggregation alias</label>
+                            <input type="text" id="agg-alias" placeholder="Alias (optional)" class="p-2 bg-white border border-slate-200 rounded-lg text-sm" aria-label="Enter aggregation alias">
                         </div>
-                        <button id="add-agg-btn" class="w-full px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-200 transition-colors">
+                        <button id="add-agg-btn" class="w-full px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-200 transition-colors" aria-label="Add aggregation to query">
                             + Add Aggregation
                         </button>
                     </div>
                     <div class="mt-4">
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Group By:</label>
-                        <select id="group-by" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm">
+                        <label for="group-by" class="block text-sm font-semibold text-slate-700 mb-2">Group By:</label>
+                        <select id="group-by" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm" aria-label="Select grouping column">
                             <option value="">No grouping</option>
                         </select>
                     </div>
@@ -144,7 +157,7 @@
                 <!-- Output Format -->
                 <div class="glass p-6 rounded-2xl shadow-lg">
                     <h3 class="text-lg font-bold text-slate-800 mb-4">4. Output Format</h3>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-4" role="radiogroup" aria-label="Output format selection">
                         <label class="flex items-center space-x-2">
                             <input type="radio" name="output-format" value="json" checked class="text-indigo-600">
                             <span class="text-sm">JSON</span>
@@ -170,7 +183,7 @@
                 <!-- Test API -->
                 <div class="glass p-6 rounded-2xl shadow-lg">
                     <h3 class="text-lg font-bold text-slate-800 mb-4">Test API</h3>
-                    <button id="test-api-btn" class="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors mb-4">
+                    <button id="test-api-btn" class="w-full px-4 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors mb-4" aria-label="Test API query">
                         Test Query
                     </button>
                     <div id="test-results" class="hidden">
@@ -185,12 +198,27 @@
                 <div class="glass p-6 rounded-2xl shadow-lg">
                     <h3 class="text-lg font-bold text-slate-800 mb-4">Save Configuration</h3>
                     <div class="space-y-3">
-                        <input type="text" id="config-name" placeholder="Configuration name" class="w-full p-3 bg-white border border-slate-200 rounded-xl">
+                        <label for="config-name" class="sr-only">Configuration name</label>
+                        <input
+                            type="text"
+                            id="config-name"
+                            placeholder="Configuration name"
+                            class="w-full p-3 bg-white border border-slate-200 rounded-xl"
+                            aria-label="Enter configuration name"
+                        >
                         <div class="grid grid-cols-2 gap-3">
-                            <button id="save-config-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            <button
+                                id="save-config-btn"
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                                aria-label="Save current configuration"
+                            >
                                 Save Configuration
                             </button>
-                            <button id="load-config-btn" class="px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors">
+                            <button
+                                id="load-config-btn"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                                aria-label="Load saved configuration"
+                            >
                                 Load Configuration
                             </button>
                         </div>
@@ -207,13 +235,13 @@
                 <div class="glass p-6 rounded-2xl shadow-lg">
                     <h3 class="text-lg font-bold text-slate-800 mb-4">Export Code</h3>
                     <div class="grid grid-cols-3 gap-3">
-                        <button id="export-curl" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors">
+                        <button id="export-curl" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors" aria-label="Export as cURL command">
                             cURL
                         </button>
-                        <button id="export-python" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors">
+                        <button id="export-python" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors" aria-label="Export as Python code">
                             Python
                         </button>
-                        <button id="export-js" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors">
+                        <button id="export-js" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 transition-colors" aria-label="Export as JavaScript code">
                             JavaScript
                         </button>
                     </div>
@@ -260,6 +288,14 @@
                     ).join('');
             } catch (error) {
                 console.error('Failed to load table schemas:', error);
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Failed to load table schemas';
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
             }
         }
 
@@ -334,6 +370,14 @@
             const value = filterValueInput.value;
 
             if (!column || !value) {
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Please select column and enter value';
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
                 alert('Please select column and enter value');
                 return;
             }
@@ -369,6 +413,14 @@
             const alias = aggAliasInput.value;
 
             if (!func || !column) {
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Please select function and column';
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
                 alert('Please select function and column');
                 return;
             }
@@ -435,6 +487,14 @@
 
         async function testQuery() {
             if (!currentDataSource) {
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Please select a data source first';
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
                 alert('Please select a data source first');
                 return;
             }
@@ -476,6 +536,14 @@
             } catch (err) {
                 testResults.classList.remove('hidden');
                 resultsPreview.textContent = `Error: ${err.message}`;
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = `Error testing query: ${err.message}`;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
             } finally {
                 testApiBtn.textContent = 'Test Query';
                 testApiBtn.disabled = false;
@@ -484,6 +552,14 @@
 
         async function saveConfiguration() {
             if (!currentDataSource) {
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Please select a data source first';
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
                 alert('Please select a data source first');
                 return;
             }
@@ -520,9 +596,25 @@
                     alert('Configuration saved successfully!');
                     renderSavedConfigs();
                 } else {
+                    // Announce error to screen readers
+                    const errorDiv = document.createElement('div');
+                    errorDiv.setAttribute('role', 'alert');
+                    errorDiv.setAttribute('aria-live', 'assertive');
+                    errorDiv.className = 'sr-only';
+                    errorDiv.textContent = 'Error: ' + (result.detail || 'Unknown error');
+                    document.body.appendChild(errorDiv);
+                    setTimeout(() => errorDiv.remove(), 5000);
                     alert('Error: ' + (result.detail || 'Unknown error'));
                 }
             } catch (err) {
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Error: ' + err.message;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
                 alert('Error: ' + err.message);
             }
         }
@@ -557,9 +649,25 @@
                     
                     alert('Configuration loaded successfully!');
                 } else {
+                    // Announce error to screen readers
+                    const errorDiv = document.createElement('div');
+                    errorDiv.setAttribute('role', 'alert');
+                    errorDiv.setAttribute('aria-live', 'assertive');
+                    errorDiv.className = 'sr-only';
+                    errorDiv.textContent = 'Configuration not found';
+                    document.body.appendChild(errorDiv);
+                    setTimeout(() => errorDiv.remove(), 5000);
                     alert('Configuration not found');
                 }
             } catch (err) {
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Error: ' + err.message;
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
                 alert('Error: ' + err.message);
             }
         }
@@ -585,6 +693,14 @@
                 }
             } catch (err) {
                 console.error('Failed to load configs:', err);
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Failed to load saved configurations';
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
             }
         }
 
@@ -615,6 +731,14 @@
                 }
             } catch (err) {
                 console.error('Failed to load config:', err);
+                // Announce error to screen readers
+                const errorDiv = document.createElement('div');
+                errorDiv.setAttribute('role', 'alert');
+                errorDiv.setAttribute('aria-live', 'assertive');
+                errorDiv.className = 'sr-only';
+                errorDiv.textContent = 'Failed to load configuration';
+                document.body.appendChild(errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
             }
         }
 

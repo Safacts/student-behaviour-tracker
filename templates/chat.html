@@ -262,6 +262,15 @@
             const query = DOM.chatInput.value.trim();
             if (!query) return;
 
+            // Ensure auth token is available
+            if (!authToken) {
+                await fetchAuthToken();
+                if (!authToken) {
+                    addMessage('ai', 'Error: Unable to authenticate. Please refresh the page.');
+                    return;
+                }
+            }
+
             // Add user message
             addMessage('user', query);
             DOM.chatInput.value = '';
@@ -291,26 +300,24 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
                 setCache(cacheKey, data);
                 removeTypingIndicator();
                 addMessage('ai', data.response);
             } catch (error) {
                 removeTypingIndicator();
-                // Announce error to screen readers
-                const errorDiv = document.createElement('div');
-                errorDiv.setAttribute('role', 'alert');
-                errorDiv.setAttribute('aria-live', 'assertive');
-                errorDiv.className = 'sr-only';
-                errorDiv.textContent = `Error communicating with the server: ${error.message}`;
-                document.body.appendChild(errorDiv);
-                setTimeout(() => errorDiv.remove(), 5000);
-                addMessage('ai', `Error communicating with the server: ${error.message}`);
+                addMessage('ai', `Error: ${error.message}. Please try again.`);
+                console.error('Error:', error);
             }
         }
 
         // Add message to chat
         function addMessage(type, text) {
+            const messageDiv = document.createElement('div');
             messageDiv.className = 'flex items-start mb-4';
             
             if (type === 'user') {
