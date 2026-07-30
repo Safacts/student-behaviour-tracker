@@ -1,8 +1,12 @@
 import google.generativeai as genai
-from dotenv import load_dotenv
+try:
+    from nidhi_sdk.kavach import load_secrets
+    load_secrets("student-behaviour-tracker")
+except ImportError:
+    pass
 import os
 
-load_dotenv()
+
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 def generate_parent_report(student_data, behavioral_tag):
